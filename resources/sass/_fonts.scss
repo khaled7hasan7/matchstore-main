@@ -1,0 +1,49 @@
+/**
+ * Typography & Fonts
+ *
+ * Cairo: Arabic/Hebrew (RTL languages)
+ * Poppins: English/French/German/Spanish (LTR languages)
+ */
+
+// Import Cairo font for Arabic/Hebrew
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap');
+
+// Import Poppins font for English and other LTR languages
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+// Font family by language
+html[lang="ar"],
+html[lang="he"] {
+    font-family: 'Cairo', sans-serif;
+
+    // Adjust font sizes for Cairo (Arabic fonts often need slight adjustments)
+    body {
+        font-size: 15px;
+        line-height: 1.7;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        font-weight: 600;
+    }
+}
+
+html[lang="en"],
+html[lang="fr"],
+html[lang="de"],
+html[lang="es"] {
+    font-family: 'Poppins', sans-serif;
+
+    body {
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        font-weight: 600;
+    }
+}
+
+// Default font family (fallback)
+body {
+    font-family: 'Poppins', 'Cairo', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}

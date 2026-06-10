@@ -1,0 +1,338 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\ShippingRegion;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
+
+class ShippingRegionSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        // Jordan Governorates (12 total)
+        $jordanRegions = [
+            [
+                'country' => 'jordan',
+                'name' => 'Amman',
+                'name_ar' => 'عمّان',
+                'code' => 'JO_AMMAN',
+                'region_type' => 'governorate',
+                'base_cost' => 3.00,
+                'per_kg_cost' => 0.50,
+                'delivery_days' => 2,
+                'is_active' => true,
+            ],
+            [
+                'country' => 'jordan',
+                'name' => 'Irbid',
+                'name_ar' => 'إربد',
+                'code' => 'JO_IRBID',
+                'region_type' => 'governorate',
+                'base_cost' => 4.00,
+                'per_kg_cost' => 0.60,
+                'delivery_days' => 3,
+                'is_active' => true,
+            ],
+            [
+                'country' => 'jordan',
+                'name' => 'Zarqa',
+                'name_ar' => 'الزرقاء',
+                'code' => 'JO_ZARQA',
+                'region_type' => 'governorate',
+                'base_cost' => 3.50,
+                'per_kg_cost' => 0.50,
+                'delivery_days' => 2,
+                'is_active' => true,
+            ],
+            [
+                'country' => 'jordan',
+                'name' => 'Aqaba',
+                'name_ar' => 'العقبة',
+                'code' => 'JO_AQABA',
+                'region_type' => 'governorate',
+                'base_cost' => 6.00,
+                'per_kg_cost' => 1.00,
+                'delivery_days' => 4,
+                'is_active' => true,
+            ],
+            [
+                'country' => 'jordan',
+                'name' => 'Mafraq',
+                'name_ar' => 'المفرق',
+                'code' => 'JO_MAFRAQ',
+                'region_type' => 'governorate',
+                'base_cost' => 4.50,
+                'per_kg_cost' => 0.70,
+                'delivery_days' => 3,
+                'is_active' => true,
+            ],
+            [
+                'country' => 'jordan',
+                'name' => 'Jerash',
+                'name_ar' => 'جرش',
+                'code' => 'JO_JERASH',
+                'region_type' => 'governorate',
+                'base_cost' => 4.00,
+                'per_kg_cost' => 0.60,
+                'delivery_days' => 3,
+                'is_active' => true,
+            ],
+            [
+                'country' => 'jordan',
+                'name' => 'Ajloun',
+                'name_ar' => 'عجلون',
+                'code' => 'JO_AJLOUN',
+                'region_type' => 'governorate',
+                'base_cost' => 4.00,
+                'per_kg_cost' => 0.60,
+                'delivery_days' => 3,
+                'is_active' => true,
+            ],
+            [
+                'country' => 'jordan',
+                'name' => 'Karak',
+                'name_ar' => 'الكرك',
+                'code' => 'JO_KARAK',
+                'region_type' => 'governorate',
+                'base_cost' => 5.00,
+                'per_kg_cost' => 0.80,
+                'delivery_days' => 3,
+                'is_active' => true,
+            ],
+            [
+                'country' => 'jordan',
+                'name' => 'Tafilah',
+                'name_ar' => 'الطفيلة',
+                'code' => 'JO_TAFILAH',
+                'region_type' => 'governorate',
+                'base_cost' => 5.50,
+                'per_kg_cost' => 0.90,
+                'delivery_days' => 4,
+                'is_active' => true,
+            ],
+            [
+                'country' => 'jordan',
+                'name' => "Ma'an",
+                'name_ar' => 'معان',
+                'code' => 'JO_MAAN',
+                'region_type' => 'governorate',
+                'base_cost' => 6.00,
+                'per_kg_cost' => 1.00,
+                'delivery_days' => 4,
+                'is_active' => true,
+            ],
+            [
+                'country' => 'jordan',
+                'name' => 'Madaba',
+                'name_ar' => 'مادبا',
+                'code' => 'JO_MADABA',
+                'region_type' => 'governorate',
+                'base_cost' => 3.50,
+                'per_kg_cost' => 0.50,
+                'delivery_days' => 2,
+                'is_active' => true,
+            ],
+            [
+                'country' => 'jordan',
+                'name' => 'Balqa',
+                'name_ar' => 'البلقاء',
+                'code' => 'JO_BALQA',
+                'region_type' => 'governorate',
+                'base_cost' => 3.50,
+                'per_kg_cost' => 0.50,
+                'delivery_days' => 2,
+                'is_active' => true,
+            ],
+        ];
+
+        // Palestine Cities (15 total - West Bank and Gaza)
+        $palestineRegions = [
+            // West Bank Cities
+            [
+                'country' => 'palestine',
+                'name' => 'Ramallah',
+                'name_ar' => 'رام الله',
+                'code' => 'PS_RAMALLAH',
+                'region_type' => 'city',
+                'base_cost' => 5.00,
+                'per_kg_cost' => 0.80,
+                'delivery_days' => 5,
+                'is_active' => true,
+            ],
+            [
+                'country' => 'palestine',
+                'name' => 'Nablus',
+                'name_ar' => 'نابلس',
+                'code' => 'PS_NABLUS',
+                'region_type' => 'city',
+                'base_cost' => 5.50,
+                'per_kg_cost' => 0.90,
+                'delivery_days' => 5,
+                'is_active' => true,
+            ],
+            [
+                'country' => 'palestine',
+                'name' => 'Hebron',
+                'name_ar' => 'الخليل',
+                'code' => 'PS_HEBRON',
+                'region_type' => 'city',
+                'base_cost' => 5.50,
+                'per_kg_cost' => 0.90,
+                'delivery_days' => 5,
+                'is_active' => true,
+            ],
+            [
+                'country' => 'palestine',
+                'name' => 'Bethlehem',
+                'name_ar' => 'بيت لحم',
+                'code' => 'PS_BETHLEHEM',
+                'region_type' => 'city',
+                'base_cost' => 5.00,
+                'per_kg_cost' => 0.80,
+                'delivery_days' => 5,
+                'is_active' => true,
+            ],
+            [
+                'country' => 'palestine',
+                'name' => 'Jenin',
+                'name_ar' => 'جنين',
+                'code' => 'PS_JENIN',
+                'region_type' => 'city',
+                'base_cost' => 6.00,
+                'per_kg_cost' => 1.00,
+                'delivery_days' => 6,
+                'is_active' => true,
+            ],
+            [
+                'country' => 'palestine',
+                'name' => 'Tulkarm',
+                'name_ar' => 'طولكرم',
+                'code' => 'PS_TULKARM',
+                'region_type' => 'city',
+                'base_cost' => 5.50,
+                'per_kg_cost' => 0.90,
+                'delivery_days' => 5,
+                'is_active' => true,
+            ],
+            [
+                'country' => 'palestine',
+                'name' => 'Qalqilya',
+                'name_ar' => 'قلقيلية',
+                'code' => 'PS_QALQILYA',
+                'region_type' => 'city',
+                'base_cost' => 5.50,
+                'per_kg_cost' => 0.90,
+                'delivery_days' => 5,
+                'is_active' => true,
+            ],
+            [
+                'country' => 'palestine',
+                'name' => 'Jericho',
+                'name_ar' => 'أريحا',
+                'code' => 'PS_JERICHO',
+                'region_type' => 'city',
+                'base_cost' => 5.00,
+                'per_kg_cost' => 0.80,
+                'delivery_days' => 5,
+                'is_active' => true,
+            ],
+            [
+                'country' => 'palestine',
+                'name' => 'Salfit',
+                'name_ar' => 'سلفيت',
+                'code' => 'PS_SALFIT',
+                'region_type' => 'city',
+                'base_cost' => 5.50,
+                'per_kg_cost' => 0.90,
+                'delivery_days' => 5,
+                'is_active' => true,
+            ],
+            [
+                'country' => 'palestine',
+                'name' => 'Tubas',
+                'name_ar' => 'طوباس',
+                'code' => 'PS_TUBAS',
+                'region_type' => 'city',
+                'base_cost' => 6.00,
+                'per_kg_cost' => 1.00,
+                'delivery_days' => 6,
+                'is_active' => true,
+            ],
+            // Gaza Strip Cities
+            [
+                'country' => 'palestine',
+                'name' => 'Gaza',
+                'name_ar' => 'غزة',
+                'code' => 'PS_GAZA',
+                'region_type' => 'city',
+                'base_cost' => 7.00,
+                'per_kg_cost' => 1.20,
+                'delivery_days' => 7,
+                'is_active' => true,
+            ],
+            [
+                'country' => 'palestine',
+                'name' => 'Khan Yunis',
+                'name_ar' => 'خان يونس',
+                'code' => 'PS_KHAN_YUNIS',
+                'region_type' => 'city',
+                'base_cost' => 7.50,
+                'per_kg_cost' => 1.30,
+                'delivery_days' => 7,
+                'is_active' => true,
+            ],
+            [
+                'country' => 'palestine',
+                'name' => 'Rafah',
+                'name_ar' => 'رفح',
+                'code' => 'PS_RAFAH',
+                'region_type' => 'city',
+                'base_cost' => 8.00,
+                'per_kg_cost' => 1.40,
+                'delivery_days' => 7,
+                'is_active' => true,
+            ],
+            [
+                'country' => 'palestine',
+                'name' => 'Deir al-Balah',
+                'name_ar' => 'دير البلح',
+                'code' => 'PS_DEIR_AL_BALAH',
+                'region_type' => 'city',
+                'base_cost' => 7.50,
+                'per_kg_cost' => 1.30,
+                'delivery_days' => 7,
+                'is_active' => true,
+            ],
+            [
+                'country' => 'palestine',
+                'name' => 'North Gaza',
+                'name_ar' => 'شمال غزة',
+                'code' => 'PS_NORTH_GAZA',
+                'region_type' => 'city',
+                'base_cost' => 7.00,
+                'per_kg_cost' => 1.20,
+                'delivery_days' => 7,
+                'is_active' => true,
+            ],
+        ];
+
+        // Insert all regions
+        foreach ($jordanRegions as $region) {
+            ShippingRegion::updateOrCreate(
+                ['code' => $region['code']],
+                $region
+            );
+        }
+
+        foreach ($palestineRegions as $region) {
+            ShippingRegion::updateOrCreate(
+                ['code' => $region['code']],
+                $region
+            );
+        }
+    }
+}

@@ -1,0 +1,21 @@
+@use 'variables';
+@use 'fonts';
+@use 'admin';
+@use 'rtl';
+
+// CSS Custom Properties (Variables)
+:root {
+    --primary-color: #0e0e0e;
+    --secondary-color: #f8f9fa;
+    --accent-color: #ffc107;
+    --dark-color: #212529;
+    --light-color: #ffffff;
+    --border-color: #dee2e6;
+    --text-muted: #6c757d;
+}
+
+// Default body styles
+body {
+    color: var(--dark-color);
+    background-color: var(--light-color);
+}
