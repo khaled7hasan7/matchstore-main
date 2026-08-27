@@ -1890,7 +1890,7 @@
                 <!-- Description Tab -->
                 <div class="tab-pane-modern active" id="description-pane">
                     <div class="product-description-content">
-                        {!! $product->translation->description !!}
+                        {!! \App\Support\HtmlSanitizer::clean($product->translation->description) !!}
                     </div>
                 </div>
 
@@ -2218,7 +2218,7 @@
             <div class="mobile-accordion-content">
                 <div class="mobile-accordion-inner">
                     <div class="mobile-description-content">
-                        {!! $product->translation->description !!}
+                        {!! \App\Support\HtmlSanitizer::clean($product->translation->description) !!}
                     </div>
                 </div>
             </div>
