@@ -1,7 +1,7 @@
 # تقرير حالة المشروع — MatchStore (مكتبة ابن تيمية)
 
 **تاريخ الفحص:** 2026-08-27
-**آخر تحديث:** 2026-08-27 — ✅ **أُنجزت جميع الإصلاحات الأمنية الحرجة** (الثغرات 1–13 في §3.1) و✅ **اكتملت المرحلة 3: مسار الشراء** (الشحن + الكوبونات + قفل المخزون + إلغاء الطلبات + اختبارات آلية شاملة — راجع §8) على الفرع `claude/convert-file-to-markdown-6fl8fu`.
+**آخر تحديث:** 2026-08-27 — ✅ **أُنجزت جميع الإصلاحات الأمنية الحرجة** (§3.1 كاملاً) و✅ **المرحلة 3: مسار الشراء** (§8) و✅ **المرحلة 2: جاهزية Supabase/PostgreSQL** — الكود بأكمله مُتحقق منه على PostgreSQL 16 حقيقي: كل الـ migrations والسيدرز وكامل الاختبارات (§9). المتبقي على Supabase خطوات إعداد فقط (§5.4).
 **الخلاصة:** المشروع **غير جاهز للإطلاق حالياً**. البنية الأساسية قوية ومكتملة (كتالوج، سلة، حسابات، لوحات تحكم)، لكن توجد **ثغرات أمنية حرجة**، ومسار الدفع الإلكتروني غير مكتمل (الدفع عند الاستلام فقط يعمل)، ولا توجد رسائل بريد للطلبات، ولا يوجد أي إعداد للنشر. الانتقال إلى Supabase **ممكن وجهده معقول** (التفاصيل في القسم 5).
 
 **تقدير الجهد الإجمالي للوصول للإطلاق: 2–3 أسابيع عمل مركّز.**
@@ -142,15 +142,15 @@ Supabase يستضيف **قاعدة البيانات (PostgreSQL)** فقط — ت
 | الأولوية | العائق | الملف | الحل | الجهد |
 |---|---|---|---|---|
 | 🔴 | امتداد PHP غير مفعّل — `pdo_pgsql` معطّل في XAMPP | `C:\xampp\php\php.ini` سطرا 947 و949 | أزل `;` من `;extension=pdo_pgsql` و`;extension=pgsql` وأعد تشغيل Apache (الملفات موجودة في `ext/`) | 5 دقائق |
-| 🔴 | `SET FOREIGN_KEY_CHECKS` — أمر MySQL فقط | `IbnTaymiyyahBookstoreSeeder.php:42,61` | احذف السطرين (ترتيب الحذف صحيح أصلاً) | 5 دقائق |
+| ✅ | ~~`SET FOREIGN_KEY_CHECKS` — أمر MySQL فقط~~ — **تم** حذفهما، والسيدر أصبح أيضاً مكتفياً ذاتياً (ينشئ البائع والمتجر بنفسه) وidempotent — مُشغَّل مرتين بنجاح على PostgreSQL | — | — | — |
 | ✅ | ~~`->change()` و`renameColumn()` تحتاجان `doctrine/dbal` وغير مثبتة~~ — **تم:** `doctrine/dbal` مثبتة الآن، وأُصلح migration `2026_01_05_135955` (كان يجمع `renameColumn` مع إضافة أعمدة في كتلة واحدة — يعمل على MySQL فقط ويفسد الجدول على SQLite/PostgreSQL) | — | — | — |
-| 🔴 | نقل البيانات — ملفا الدمب بصيغة MariaDB لا يقبلهما PostgreSQL | `backup*.sql` | شغّل `php artisan migrate` على Supabase لبناء المخطط، ثم انقل **البيانات فقط** عبر pgloader أو CSV، ثم اضبط الـ sequences (انظر 5.4) | 4–8 ساعات |
-| 🟠 | استعلام فرز السعر سيفشل على PG — `groupBy` + `orderByRaw(MIN(...))` مع `withCount`/`withAvg` | `Store/ShopController.php:90-99` | أعد كتابته بـ subquery: `orderBy(ProductVariant::select('price')->whereColumn('product_id','products.id')->orderBy('price')->limit(1))` | 2–3 ساعات |
-| 🟠 | `LIKE` حساس لحالة الأحرف على PG — البحث الإنجليزي سيتأثر (العربية لا تتأثر) | `SearchController.php:19,52` · `SubscriberController.php:20` · `MenuItemRepository.php:31` | استبدل `'like'` بـ `'ilike'`، وفعّل `case_insensitive` في إعدادات yajra DataTables | 1–2 ساعة |
-| 🟡 | 14 عمود `enum()` في 13 جدولاً | جداول: orders، payments، refunds، vendors، customers، coupons، brands... | تعمل على PG كـ `varchar + CHECK` تلقائياً، لكن يُنصح بتحويلها إلى `string` + تحقق في التطبيق لسهولة التعديل لاحقاً | 3–4 ساعات (اختياري) |
-| 🟡 | عمود `SKU` بأحرف كبيرة → يصبح معرّفاً حساساً `"SKU"` على PG | `create_product_variants_table.php:21` | أعد تسميته `sku` وحدّث الموديل والواجهات | 1 ساعة |
-| 🟢 | 5 أعمدة `json` | payments، refunds، shipping_zones | تُبنى أصلياً عند الـ migrate؛ يفضَّل `jsonb` | 30 دقيقة |
-| 🟢 | جدول `password_resets` القديم بلا مفتاح أساسي (مكرر مع `password_reset_tokens`) | migration `2014_10_12` | احذف الجدول القديم | 15 دقيقة |
+| ✅ | ~~نقل البيانات~~ — **الخيار أ (إعادة الزرع) أصبح مثبتاً عملياً:** migrate + كل السيدرز + سيدر المكتبة نفّذت كاملة على PostgreSQL 16 (راجع الأوامر الجاهزة في §5.4). لا حاجة لـ pgloader إلا إذا أردت نقل طلبات/عملاء حقيقيين من MariaDB | — | — | — |
+| ✅ | ~~استعلام فرز السعر سيفشل على PG~~ — **تم** بإعادة كتابته بـ subquery ارتباطي، **واكتُشف أثناءها 4 أخطاء إضافية أُصلحت:** فلتر التقييم يولّد `SELECT *` مع `GROUP BY` (مرفوض على PG) + ربط نصّي يُفشل الفلتر صامتاً على SQLite + فرز `name_asc` على عمود غير موجود أصلاً + فلتر المخزون على عمود باسم خاطئ (`stock_quantity`) | — | — | — |
+| ✅ | ~~`LIKE` حساس لحالة الأحرف على PG~~ — **تم:** أُضيف macro محمول `whereLike`/`orWhereLike` (يستخدم `ILIKE` على pgsql فقط) وطُبّق على بحث المنتجات والمشتركين وslugs القوائم؛ إعداد yajra `case_insensitive` كان مفعّلاً أصلاً. مُختبر: البحث بـ "SAHIH" الكبيرة يطابق على PG | — | — | — |
+| ✅ | ~~14 عمود `enum()`~~ — **مُتحقق:** تُبنى تلقائياً كـ `varchar + CHECK` على PG وتعمل (كل الـ migrations والاختبارات مرّت). التحويل إلى `string` يبقى تحسيناً اختيارياً لاحقاً | — | — | — |
+| ✅ | ~~عمود `SKU` بأحرف كبيرة~~ — **مُتحقق: لا حاجة لإعادة التسمية.** كل الوصول عبر Query Builder الذي يقتبس المعرّف `"SKU"` تلقائياً — الاختبارات تُدخل وتستعلم SKU على PG بنجاح. أعد التسمية فقط إن كتبت SQL خام مستقبلاً | — | — | — |
+| ✅ | ~~5 أعمدة `json`~~ — **مُتحقق:** بُنيت أصلياً عند migrate على PG. الترقية إلى `jsonb` تحسين اختياري | — | — | — |
+| ✅ | ~~جدول `password_resets` القديم (مكرر)~~ — **تصحيح مهم للتقرير: الجدول ليس مكرراً — إنه جدول استعادة كلمة مرور العملاء** (`config/auth.php` broker `customers`) وحذفه كان سيكسر الاستعادة! **تم** بدلاً من ذلك: migration جديد يضيف مفتاحاً أساسياً على `email` (يزيل تحذير Supabase ويسمح بالـ replication) | — | — | — |
 | ✅ | ~~خصم المخزون بلا قفل — أخطر على PG~~ — **تم** ضمن المرحلة 3: حجز المخزون بـ `lockForUpdate()` داخل Transaction | — | — | — |
 
 ### 5.4 خطوات التنفيذ العملية
@@ -174,22 +174,30 @@ DB_PASSWORD=<كلمة المرور>
 > - استخدم منفذ **5432 (Session Mode)** لأوامر `migrate` والتطبيق. منفذ **6543 (Transaction Mode)** يكسر Prepared Statements في Laravel ما لم تفعّل `PDO::ATTR_EMULATE_PREPARES`.
 > - الاتصال المباشر `db.<ref>.supabase.co` يعمل عبر IPv6 فقط في الخطة المجانية — استخدم عنوان الـ Pooler أعلاه.
 
-**الخطوة 3 — إصلاحات الكود** (حسب جدول 5.3): حذف سطري `FOREIGN_KEY_CHECKS`، تثبيت `doctrine/dbal`، إصلاح `ShopController`، تحويل `like` → `ilike`.
+**الخطوة 3 — إصلاحات الكود: ✅ منجزة بالكامل ومدفوعة للمستودع** (حذف `FOREIGN_KEY_CHECKS`، تثبيت `doctrine/dbal`، إعادة كتابة استعلامات `ShopController`، macro `whereLike` المحمول، إصلاح migrations الجمع بين rename والإضافة).
 
-**الخطوة 4 — بناء المخطط:**
+**الخطوة 4 — بناء المخطط والبيانات** (التسلسل الكامل المُختبر فعلياً على PostgreSQL 16):
 ```bash
 php artisan migrate --force
+php artisan db:seed --force --class=LanguageSeeder
+php artisan db:seed --force --class=CurrencySeeder
+php artisan db:seed --force --class=ShippingRegionSeeder
+php artisan db:seed --force --class=PaymentGatewaySeeder
+php artisan db:seed --force --class=PaymentGatewayConfigSeeder
+php artisan db:seed --force --class=MenuSeeder
+php artisan db:seed --force --class=PageSeeder
+php artisan db:seed --force --class=SiteSettingsSeeder
+php artisan db:seed --force --class=IbnTaymiyyahBookstoreSeeder
 ```
+ثم أنشئ حساب الأدمن: `php artisan install:matchstore` (يولّد كلمة مرور عشوائية ويعرضها مرة واحدة)، أو أنشئه يدوياً.
 
-**الخطوة 5 — نقل البيانات** (البيانات الحالية تجريبية في معظمها — قد يكون الأسهل إعادة الـ seeding بدل النقل):
-- **الخيار أ (أنظف):** `php artisan db:seed` + `php artisan matchstore:install --with-import` لإعادة توليد البيانات على Supabase مباشرة، ثم تشغيل `IbnTaymiyyahBookstoreSeeder` (بعد إصلاحه).
-- **الخيار ب (نقل فعلي):** pgloader من MariaDB إلى PostgreSQL، أو تصدير كل جدول CSV واستيراده بـ `\copy`، **ثم إعادة ضبط العدّادات** لكل الجداول (وإلا ستتصادم المعرّفات الجديدة):
-```sql
-SELECT setval(pg_get_serial_sequence('products','id'), COALESCE(MAX(id),1)) FROM products;
--- كرر لكل جدول (54 جدولاً)
+> السيدرز الآن idempotent — إعادة تشغيلها آمنة. **الخيار ب (نقل فعلي من MariaDB)** يلزم فقط إن كانت لديك طلبات/عملاء حقيقيون: pgloader أو CSV عبر `\copy`، ثم إعادة ضبط العدّادات: `SELECT setval(pg_get_serial_sequence('products','id'), COALESCE(MAX(id),1)) FROM products;` لكل جدول.
+
+**الخطوة 5 — الاختبار:** الحزمة الآلية تغطي الأساس وقد **نجحت كاملة على PostgreSQL** (15 اختباراً: checkout كاملاً، الفرز والفلاتر والبحث). شغّلها بنفسك على قاعدة Supabase فارغة إن أردت:
+```bash
+DB_CONNECTION=pgsql DB_HOST=... DB_DATABASE=... DB_USERNAME=... DB_PASSWORD=... php artisan test
 ```
-
-**الخطوة 6 — الاختبار الشامل:** البحث، فلاتر المتجر (خاصة الفرز بالسعر والتقييم)، الـ checkout بالكامل، جداول DataTables في لوحة الأدمن، تبديل اللغة والعملة.
+يتبقى يدوياً: جداول DataTables في لوحة الأدمن، وتبديل اللغة/العملة في المتصفح.
 
 **الخطوة 7 (اختياري لاحقاً) —** نقل صور المنتجات إلى Supabase Storage عبر واجهته المتوافقة مع S3 (`composer require league/flysystem-aws-s3-v3` + إعداد disk `s3` بمفاتيح Supabase Storage).
 
@@ -202,7 +210,7 @@ SELECT setval(pg_get_serial_sequence('products','id'), COALESCE(MAX(id),1)) FROM
 | المرحلة | المحتوى | المدة التقديرية |
 |---|---|---|
 | **1. الإصلاحات الأمنية الحرجة** ✅ | ~~البنود الحرجة في §4~~ — **أُنجزت** (راجع §7) | ~~2–3 أيام~~ |
-| **2. الانتقال إلى Supabase** | §5 كاملاً + الاختبار الشامل (تقدّم جزئي: dbal مثبتة + migrations أصبحت محمولة) | 2–3 أيام |
+| **2. الانتقال إلى Supabase** ✅ (شق الكود) | ~~§5 كاملاً~~ — **الكود جاهز ومُتحقق منه على PostgreSQL 16 حقيقي** (migrations + seeders + كامل الاختبارات — راجع §9). المتبقي خطوات إعداد على حسابك: إنشاء مشروع Supabase + ملء `.env` + تنفيذ أوامر §5.4 | ~2–3 ساعات إعداد |
 | **3. إكمال مسار الشراء** ✅ | ~~الشحن، إصلاح checkout، COD، قفل المخزون~~ — **أُنجزت بنهج COD أولاً** (راجع §8) | ~~3–5 أيام~~ |
 | **4. البريد والإشعارات** | تأكيد الطلب، إشعارات الأدمن/البائع، SMTP حقيقي، طابور + worker | 1–2 يوم |
 | **5. التجهيز للنشر** | استضافة PHP، `.env` إنتاجي، حذف `hot`، symlink، HTTPS، نسخ احتياطي | 1–2 يوم |
@@ -257,7 +265,31 @@ SELECT setval(pg_get_serial_sequence('products','id'), COALESCE(MAX(id),1)) FROM
 
 ---
 
-## 9. ملاحظات إضافية
+## 9. سجل إصلاحات المرحلة 2 — جاهزية Supabase/PostgreSQL (2026-08-27)
+
+**منهج التحقق:** بدل الاكتفاء بالإصلاح النظري، شُغّل PostgreSQL 16 فعلي وأُعيد عليه كل شيء: **كل الـ60 migration نجحت، وكل السيدرز نجحت (وسيدر المكتبة مرتين لإثبات الـ idempotency)، وكامل حزمة الاختبارات (15 اختباراً / 64 تحققاً) خضراء على PostgreSQL وSQLite معاً**، مع فحوص يدوية على بيانات المكتبة المزروعة (22 كتاباً): فرز السعر تصاعدياً/تنازلياً، الفرز بالاسم المترجم، البحث الإنجليزي بحالة أحرف مختلفة (ILIKE)، والبحث العربي.
+
+أبرز ما اكتُشف وأُصلح أثناء التحقق (لم يكن في التقرير الأصلي):
+
+| الاكتشاف | التفصيل |
+|---|---|
+| فلتر التقييم مكسور بصمت | يولّد `SELECT *` مع `GROUP BY` (يرفضه PG بخطأ صريح)، وقيمة التقييم كانت تُربط نصياً فيفشل الفلتر **بصمت** على SQLite — أعيدت كتابته بـ subquery ارتباطي وربط رقمي |
+| فرز الاسم معطوب على كل القواعد | `orderBy('name')` وجدول المنتجات لا يحوي عمود name أصلاً (الاسم في الترجمات) — كان يرمي استثناء على MariaDB أيضاً |
+| فلتر المخزون معطوب على كل القواعد | يستعلم عن عمود `stock_quantity` غير الموجود (الصحيح `stock`) |
+| سيدر المكتبة يفترض بيانات ديمو | كان يعتمد على وجود بائع/متجر مسبقاً (`?? 1`) فيفشل على قاعدة نظيفة — أصبح ينشئهما بنفسه، ويمرر قيمة enum صحيحة لحالة العلامة التجارية (كان يمرر boolean يقبله MySQL فقط) |
+| `CurrencySeeder` يتصادم مع migrations البيانات | العملات تُدخل أصلاً في migrations — أصبح idempotent بـ `updateOrInsert` |
+| تصحيح توصية خاطئة في التقرير | جدول `password_resets` ليس مكرراً بل هو جدول استعادة كلمة مرور **العملاء** — حذفه كان سيكسرها؛ أُضيف له مفتاح أساسي بدلاً من ذلك |
+| تسلسلات PG كشفت افتراضاً هشاً | `shops.vendor_id` الافتراضي (1) ينكسر مع تسلسلات PostgreSQL — الاختبارات تعيّنه صراحة الآن |
+
+**ما يلزمك لإتمام الانتقال فعلياً** (خطوات إعداد فقط، الكود جاهز):
+1. أنشئ مشروع Supabase واحفظ كلمة مرور القاعدة (§5.4 خطوة 1)
+2. املأ `.env` ببيانات الـ Session Pooler + `DB_SSLMODE=require` — القالب جاهز معلّقاً في `.env.example`
+3. نفّذ أوامر §5.4 خطوة 4 (migrate + seeders بالترتيب المذكور)
+4. على جهازك المحلي (XAMPP) لو أردت التطوير على PG محلياً: فعّل `extension=pdo_pgsql` و`extension=pgsql` في `php.ini`
+
+---
+
+## 10. ملاحظات إضافية
 
 - **جودة عامة جيدة:** لا يوجد `dd()` أو `TODO` منسية في الكود، والموديلات منظمة، والترجمة عبر جداول ترجمة نظيفة.
 - **ازدواجية كود:** `Vendor/ProductController` نسخة شبه مطابقة من `Admin/ProductController` (374 سطراً)، و`ImageService` مكرر — فرصة توحيد لاحقاً.
