@@ -121,7 +121,7 @@
         color: #ffffff;
     }
 
-    .status-cancelled {
+    .status-cancelled, .status-canceled {
         background: linear-gradient(135deg, #ef4444, #dc2626);
         color: #ffffff;
     }
@@ -446,7 +446,7 @@
         color: #ffffff;
     }
 
-    .mobile-status-cancelled {
+    .mobile-status-cancelled, .mobile-status-canceled {
         background: linear-gradient(135deg, #ef4444, #dc2626);
         color: #ffffff;
     }

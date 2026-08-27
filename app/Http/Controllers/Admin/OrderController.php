@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\ProductVariant;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
 
 class OrderController extends Controller
@@ -42,7 +44,7 @@ class OrderController extends Controller
                 $statusColors = [
                     'pending' => 'warning',
                     'completed' => 'success',
-                    'cancelled' => 'danger',
+                    'canceled' => 'danger',
                     'processing' => 'info',
                 ];
                 $color = $statusColors[$order->status] ?? 'secondary';
@@ -73,13 +75,28 @@ class OrderController extends Controller
 
     public function updateStatus(Request $request, $id)
     {
+        // "canceled" (one l) matches the orders.status enum in the database
         $request->validate([
-            'status' => 'required|in:pending,processing,completed,cancelled',
+            'status' => 'required|in:pending,processing,completed,canceled',
         ]);
 
-        $order = Order::findOrFail($id);
-        $order->status = $request->status;
-        $order->save();
+        $order = Order::with('details')->findOrFail($id);
+
+        DB::transaction(function () use ($order, $request) {
+            // Return reserved stock when an order is canceled (once)
+            if ($request->status === 'canceled' && $order->status !== 'canceled') {
+                foreach ($order->details as $detail) {
+                    if ($detail->variant_id) {
+                        ProductVariant::whereKey($detail->variant_id)
+                            ->lockForUpdate()
+                            ->increment('stock', $detail->quantity);
+                    }
+                }
+            }
+
+            $order->status = $request->status;
+            $order->save();
+        });
 
         return redirect()->back()->with('success', 'Order status updated successfully.');
     }

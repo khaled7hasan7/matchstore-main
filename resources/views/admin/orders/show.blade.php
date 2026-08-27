@@ -97,7 +97,7 @@
                             'pending' => 'warning',
                             'processing' => 'info',
                             'completed' => 'success',
-                            'cancelled' => 'danger',
+                            'canceled' => 'danger',
                         ];
                         $color = $statusColors[$order->status] ?? 'secondary';
                     @endphp
@@ -258,7 +258,7 @@
                     <option value="pending" {{ $order->status === 'pending' ? 'selected' : '' }}>{{ __('cms.order_details.order_statuses.pending') }}</option>
                     <option value="processing" {{ $order->status === 'processing' ? 'selected' : '' }}>{{ __('cms.order_details.order_statuses.processing') }}</option>
                     <option value="completed" {{ $order->status === 'completed' ? 'selected' : '' }}>{{ __('cms.order_details.order_statuses.completed') }}</option>
-                    <option value="cancelled" {{ $order->status === 'cancelled' ? 'selected' : '' }}>{{ __('cms.order_details.order_statuses.cancelled') }}</option>
+                    <option value="canceled" {{ $order->status === 'canceled' ? 'selected' : '' }}>{{ __('cms.order_details.order_statuses.cancelled') }}</option>
                 </select>
             </div>
             <div class="mt-4">

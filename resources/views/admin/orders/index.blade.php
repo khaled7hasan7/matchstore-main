@@ -81,7 +81,7 @@
             color: #0a3622;
         }
 
-        .status-badge.cancelled {
+        .status-badge.canceled {
             background: #f8d7da;
             color: #842029;
         }
@@ -227,7 +227,7 @@
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="cancelled-tab" data-status="cancelled" type="button" role="tab">
+                    <button class="nav-link" id="cancelled-tab" data-status="canceled" type="button" role="tab">
                         {{ __('cms.orders.cancelled') ?? 'Cancelled' }}
                     </button>
                 </li>
