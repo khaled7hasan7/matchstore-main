@@ -11,6 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Rename in its own call: combining renameColumn with column adds in
+        // one blueprint breaks on SQLite/PostgreSQL (works only on MySQL).
+        Schema::table('orders', function (Blueprint $table) {
+            $table->renameColumn('total_amount', 'total');
+        });
+
         Schema::table('orders', function (Blueprint $table) {
             // Customer information
             $table->string('first_name')->after('customer_id');
@@ -37,9 +43,6 @@ return new class extends Migration
             $table->string('payment_method', 50)->after('billing_zipcode');
             $table->enum('payment_status', ['pending', 'paid', 'failed', 'refunded'])->default('pending')->after('payment_method');
             $table->string('transaction_id')->nullable()->after('payment_status');
-
-            // Rename total_amount to total for consistency
-            $table->renameColumn('total_amount', 'total');
         });
     }
 
@@ -70,8 +73,9 @@ return new class extends Migration
                 'payment_status',
                 'transaction_id',
             ]);
+        });
 
-            // Rename total back to total_amount
+        Schema::table('orders', function (Blueprint $table) {
             $table->renameColumn('total', 'total_amount');
         });
     }
