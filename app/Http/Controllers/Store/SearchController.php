@@ -16,7 +16,7 @@ class SearchController extends Controller
         $locale = $request->input('locale', App::getLocale());
 
         $products = Product::whereHas('translations', function ($q) use ($query, $locale) {
-            $q->where('name', 'like', "%{$query}%")->where('language_code', $locale);
+            $q->whereLike('name', "%{$query}%")->where('language_code', $locale);
         })
             ->with([
                 'translations' => function ($q) use ($locale) {
@@ -49,7 +49,7 @@ class SearchController extends Controller
         $locale = $request->input('locale', App::getLocale());
 
         $products = Product::whereHas('translations', function ($q) use ($query, $locale) {
-            $q->where('name', 'like', "%{$query}%")->where('language_code', $locale);
+            $q->whereLike('name', "%{$query}%")->where('language_code', $locale);
         })
             ->with([
                 'translations' => function ($q) use ($locale) {

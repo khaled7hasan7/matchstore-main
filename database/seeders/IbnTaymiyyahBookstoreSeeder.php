@@ -9,9 +9,12 @@ use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\ProductTranslation;
 use App\Models\ProductVariant;
+use App\Models\Shop;
 use App\Models\SiteSetting;
+use App\Models\Vendor;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class IbnTaymiyyahBookstoreSeeder extends Seeder
@@ -21,8 +24,32 @@ class IbnTaymiyyahBookstoreSeeder extends Seeder
      */
     public function run(): void
     {
-        $shopId = (int) (DB::table('shops')->min('id') ?? 1);
-        $vendorId = (int) (DB::table('vendors')->min('id') ?? 1);
+        // Self-sufficient on a fresh database: create the bookstore's vendor
+        // and shop when none exist instead of assuming demo ids.
+        $vendor = Vendor::firstOrCreate(
+            ['email' => 'store@ibntaymiyyah.example'],
+            [
+                'name' => 'مكتبة ابن تيمية',
+                'password' => Hash::make(Str::password(16)),
+                'status' => 'active',
+            ]
+        );
+
+        // Insert directly: the Shop model regenerates the slug from the
+        // Arabic name on create, which would break idempotent re-runs.
+        $shopId = DB::table('shops')->where('slug', 'ibn-taymiyyah-bookstore')->value('id');
+        if (! $shopId) {
+            $shopId = DB::table('shops')->insertGetId([
+                'vendor_id' => $vendor->id,
+                'name' => 'مكتبة ابن تيمية',
+                'slug' => 'ibn-taymiyyah-bookstore',
+                'status' => 'active',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        $vendorId = $vendor->id;
 
         $this->clearStoreContent();
         $this->updateSiteSettings();
@@ -39,7 +66,8 @@ class IbnTaymiyyahBookstoreSeeder extends Seeder
 
     private function clearStoreContent(): void
     {
-        DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        // Children are deleted before parents, so no FK toggling is needed —
+        // SET FOREIGN_KEY_CHECKS is MySQL-only and breaks on PostgreSQL.
         foreach ([
             'product_variant_attribute_values',
             'product_attribute_values',
@@ -58,7 +86,6 @@ class IbnTaymiyyahBookstoreSeeder extends Seeder
                 DB::table($table)->delete();
             }
         }
-        DB::statement('SET FOREIGN_KEY_CHECKS=1');
     }
 
     private function updateSiteSettings(): void
@@ -134,7 +161,8 @@ class IbnTaymiyyahBookstoreSeeder extends Seeder
 
         $map = [];
         foreach ($publishers as $p) {
-            $brand = Brand::firstOrCreate(['slug' => $p['slug']], ['status' => true]);
+            // brands.status is an enum — a boolean passes on MySQL only
+            $brand = Brand::firstOrCreate(['slug' => $p['slug']], ['status' => 'active']);
             foreach (['ar' => $p['ar'], 'en' => $p['en']] as $locale => $name) {
                 $brand->translations()->updateOrCreate(
                     ['locale' => $locale],

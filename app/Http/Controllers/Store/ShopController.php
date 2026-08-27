@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductReview;
+use App\Models\ProductTranslation;
+use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 
 class ShopController extends Controller
@@ -49,11 +52,17 @@ class ShopController extends Controller
                 $query->whereIn('brand_id', $filters['brand']);
             })
             ->when($filters['rating'], function ($query) use ($filters) {
-                $query->whereHas('reviews', function ($q) use ($filters) {
-                    $q->selectRaw('AVG(rating) as avg_rating')
-                        ->groupBy('product_id')
-                        ->havingRaw('AVG(rating) >= ?', [$filters['rating']]);
-                });
+                // Correlated average subquery: whereHas + groupBy/having emits
+                // SELECT * with GROUP BY, which PostgreSQL rejects. The int
+                // cast matters too — PDO sends strings as text and SQLite
+                // won't coerce text against the affinity-less AVG() result.
+                $query->where(
+                    ProductReview::selectRaw('AVG(rating)')
+                        ->whereColumn('product_id', 'products.id')
+                        ->where('is_approved', 1),
+                    '>=',
+                    (int) $filters['rating']
+                );
             })
             ->whereHas('variants', function ($variantQuery) use ($filters) {
                 $variantQuery
@@ -64,7 +73,7 @@ class ShopController extends Controller
                         $q->where('price', '<=', $filters['price_max']);
                     })
                     ->when($filters['in_stock'], function ($q) {
-                        $q->where('stock_quantity', '>', 0);
+                        $q->where('stock', '>', 0);
                     })
                     ->when(! empty($filters['color']), function ($q) use ($filters) {
                         $q->whereHas('attributeValues', function ($avQuery) use ($filters) {
@@ -84,28 +93,35 @@ class ShopController extends Controller
                     });
             });
 
-        // Apply sorting
+        // Apply sorting. Price sorting uses a correlated subquery instead of
+        // join + groupBy + orderByRaw(MIN(...)), which PostgreSQL rejects and
+        // which duplicated rows on MySQL.
+        $lowestVariantPrice = ProductVariant::select('price')
+            ->whereColumn('product_id', 'products.id')
+            ->orderBy('price')
+            ->limit(1);
+
         switch ($filters['sort']) {
             case 'price_low':
-                $query->join('product_variants', 'products.id', '=', 'product_variants.product_id')
-                    ->select('products.*')
-                    ->groupBy('products.id')
-                    ->orderByRaw('MIN(product_variants.price) ASC');
+                $query->orderBy($lowestVariantPrice);
                 break;
             case 'price_high':
-                $query->join('product_variants', 'products.id', '=', 'product_variants.product_id')
-                    ->select('products.*')
-                    ->groupBy('products.id')
-                    ->orderByRaw('MIN(product_variants.price) DESC');
+                $query->orderByDesc($lowestVariantPrice);
                 break;
             case 'newest':
                 $query->orderBy('created_at', 'DESC');
                 break;
             case 'rating':
-                $query->orderBy('reviews_avg_rating', 'DESC');
+                $query->orderByDesc('reviews_avg_rating');
                 break;
             case 'name_asc':
-                $query->orderBy('name', 'ASC');
+                // products has no name column — the name lives on the translation
+                $query->orderBy(
+                    ProductTranslation::select('name')
+                        ->whereColumn('product_id', 'products.id')
+                        ->where('language_code', $locale)
+                        ->limit(1)
+                );
                 break;
             default:
                 $query->orderBy('created_at', 'DESC');

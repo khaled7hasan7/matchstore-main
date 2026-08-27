@@ -18,6 +18,7 @@ use App\Repositories\Admin\SocialMediaLink\SocialMediaLinkRepository;
 use App\Repositories\Admin\SocialMediaLink\SocialMediaLinkRepositoryInterface;
 use App\Services\Admin\ImageService;
 use App\Services\Admin\MenuService;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Cache;
@@ -61,6 +62,22 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Case-insensitive LIKE that is portable across drivers: PostgreSQL's
+        // LIKE is case-sensitive (unlike MySQL/SQLite), so use ILIKE there.
+        QueryBuilder::macro('whereLike', function (string $column, string $value) {
+            /** @var QueryBuilder $this */
+            $operator = $this->getConnection()->getDriverName() === 'pgsql' ? 'ilike' : 'like';
+
+            return $this->where($column, $operator, $value);
+        });
+
+        QueryBuilder::macro('orWhereLike', function (string $column, string $value) {
+            /** @var QueryBuilder $this */
+            $operator = $this->getConnection()->getDriverName() === 'pgsql' ? 'ilike' : 'like';
+
+            return $this->orWhere($column, $operator, $value);
+        });
+
         // Share site settings with all views
         View::composer('*', function ($view) {
             $siteSettings = Cache::remember('site_settings', 3600, function () {

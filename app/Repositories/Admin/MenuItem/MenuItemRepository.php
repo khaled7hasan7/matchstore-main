@@ -28,7 +28,7 @@ class MenuItemRepository implements MenuItemRepositoryInterface
             $defaultTitle = $request->title[$defaultLang] ?? 'menu-item';
 
             $slug = Str::slug($defaultTitle);
-            $slugCount = MenuItem::where('slug', 'like', "{$slug}%")->count();
+            $slugCount = MenuItem::whereLike('slug', "{$slug}%")->count();
             if ($slugCount > 0) {
                 $slug .= '-'.($slugCount + 1);
             }

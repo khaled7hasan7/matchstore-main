@@ -17,7 +17,7 @@ class SubscriberController extends Controller
 
         $subscribers = Subscriber::query()
             ->when($search, function ($query, $search) {
-                $query->where('email', 'like', "%{$search}%");
+                $query->whereLike('email', "%{$search}%");
             })
             ->when($status, function ($query, $status) {
                 $query->where('status', $status);

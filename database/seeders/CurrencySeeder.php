@@ -12,23 +12,25 @@ class CurrencySeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('currencies')->insert([
+        // Idempotent: currency rows may already exist from data migrations
+        foreach ([
             [
                 'name' => 'US Dollar',
                 'code' => 'USD',
                 'symbol' => '$',
                 'exchange_rate' => 1.0000,
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'name' => 'Jordanian Dinar',
                 'code' => 'JOD',
                 'symbol' => 'د.ا',
                 'exchange_rate' => 0.7090,
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
-        ]);
+        ] as $currency) {
+            DB::table('currencies')->updateOrInsert(
+                ['code' => $currency['code']],
+                $currency + ['created_at' => now(), 'updated_at' => now()]
+            );
+        }
     }
 }

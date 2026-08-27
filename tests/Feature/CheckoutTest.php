@@ -38,10 +38,9 @@ class CheckoutTest extends TestCase
             'status' => 'active',
         ]);
 
-        $shop = Shop::create([
-            'name' => 'Test Shop',
-            'slug' => 'test-shop',
-        ]);
+        $shop = new Shop(['name' => 'Test Shop', 'slug' => 'test-shop']);
+        $shop->vendor_id = $vendor->id;
+        $shop->save();
 
         DB::table('categories')->insert([
             'slug' => 'books',
