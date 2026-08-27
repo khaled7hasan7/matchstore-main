@@ -639,6 +639,12 @@
                             <div class="col-6 col-md-4">{{ __('store.checkout.subtotal') }}</div>
                             <div class="col-6 col-md-8 text-end" id="subtotal-display">${{ number_format($subtotal, 2) }}</div>
                         </div>
+                        @if($discount > 0)
+                        <div class="row border-bottom pb-2 mb-2 text-success">
+                            <div class="col-6 col-md-6">{{ __('store.checkout.discount') }} ({{ $coupon->code }})</div>
+                            <div class="col-6 col-md-6 text-end">-${{ number_format($discount, 2) }}</div>
+                        </div>
+                        @endif
                         <div class="row border-bottom pb-2 mb-2">
                             <div class="col-4 col-md-4">{{ __('store.checkout.shipping') }}</div>
                             <div class="col-8 col-md-8 text-end" id="shipping-cost-display">
@@ -683,6 +689,12 @@
                     <span>{{ __('store.checkout.subtotal') }}</span>
                     <span id="mobile-subtotal-display">{{ $currency->symbol }}{{ number_format($subtotal, 2) }}</span>
                 </div>
+                @if($discount > 0)
+                <div class="mobile-summary-row text-success">
+                    <span>{{ __('store.checkout.discount') }} ({{ $coupon->code }})</span>
+                    <span>-{{ $currency->symbol }}{{ number_format($discount, 2) }}</span>
+                </div>
+                @endif
                 <div class="mobile-summary-row">
                     <span>{{ __('store.checkout.shipping') }}</span>
                     <span id="mobile-shipping-display">{{ __('store.checkout.select_location') }}</span>
@@ -828,6 +840,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const shippingCostDisplay = document.getElementById('shipping-cost-display');
     const totalDisplay = document.getElementById('total-display');
     const subtotal = {{ $subtotal }};
+    const discount = {{ $discount ?? 0 }};
 
     let currentShippingCost = 0;
     let selectedRegion = null;
@@ -913,7 +926,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     function updateTotal() {
-        const total = subtotal + currentShippingCost;
+        const total = Math.max(0, subtotal - discount) + currentShippingCost;
         totalDisplay.textContent = '$' + total.toFixed(2);
     }
 });
@@ -982,38 +995,46 @@ document.addEventListener("DOMContentLoaded", async () => {
     </script>
 @endif
 <?php */ ?>
+@if(!empty($paypalClientId))
 <script src="https://www.paypal.com/sdk/js?client-id={{ $paypalClientId }}&currency=USD"></script>
+@endif
+@if(!empty($stripePublicKey))
 <script src="https://js.stripe.com/v3/"></script>
+@endif
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const gatewayRadios = document.querySelectorAll('input[name="gateway"]');
     const paypalContainer = document.getElementById("paypal-button-container");
     const stripeContainer = document.getElementById("card-element");
-    const placeOrderBtn = document.getElementById("place-order");
 
-    let stripe = Stripe("asdasd");
-    let elements = stripe.elements();
-    let card = elements.create("card");
-    card.mount("#card-element");
+    // Stripe/PayPal are initialized only when the gateway is active and
+    // actually configured, so a missing key can never break COD checkout.
+    let stripe = null;
+    let card = null;
+
+    @if(!empty($stripePublicKey))
+    if (stripeContainer && typeof Stripe !== "undefined") {
+        stripe = Stripe(@json($stripePublicKey));
+        let elements = stripe.elements();
+        card = elements.create("card");
+        card.mount("#card-element");
+    }
+    @endif
 
     // Show correct payment fields
     gatewayRadios.forEach(radio => {
         radio.addEventListener("change", function () {
-            if (this.value === "paypal") {
-                paypalContainer.style.display = "block";
-                stripeContainer.style.display = "none";
-            } else if (this.value === "stripe") {
-                stripeContainer.style.display = "block";
-                paypalContainer.style.display = "none";
-            } else {
-                paypalContainer.style.display = "none";
-                stripeContainer.style.display = "none";
+            if (paypalContainer) {
+                paypalContainer.style.display = this.value === "paypal" ? "block" : "none";
+            }
+            if (stripeContainer) {
+                stripeContainer.style.display = this.value === "stripe" ? "block" : "none";
             }
         });
     });
 
     // PayPal integration
-    if (typeof paypal !== "undefined") {
+    if (typeof paypal !== "undefined" && paypalContainer) {
         paypal.Buttons({
             createOrder: function (data, actions) {
                 return actions.order.create({
@@ -1042,14 +1063,18 @@ document.addEventListener("DOMContentLoaded", function () {
         }).render("#paypal-button-container");
     }
 
-    // Stripe integration
+    // Stripe integration — COD submits the form natively
     const form = document.getElementById("checkout-form");
     form.addEventListener("submit", async function (e) {
-        e.preventDefault();
+        const checked = document.querySelector('input[name="gateway"]:checked');
 
-        let selectedGateway = document.querySelector('input[name="gateway"]:checked').value;
+        if (!checked) {
+            return; // let native "required" validation handle it
+        }
 
-        if (selectedGateway === "stripe") {
+        if (checked.value === "stripe" && stripe && card) {
+            e.preventDefault();
+
             const {paymentMethod, error} = await stripe.createPaymentMethod({
                 type: "card",
                 card: card,
@@ -1070,14 +1095,28 @@ document.addEventListener("DOMContentLoaded", function () {
                     window.location.href = "/thank-you";
                 });
             }
-        } else if (selectedGateway === "paypal") {
-            alert("Please complete payment with PayPal button");
-        } else {
-            form.submit();
+        } else if (checked.value === "paypal") {
+            e.preventDefault();
+            alert("{{ __('store.checkout.paypal_instructions') }}");
         }
     });
 });
 </script>
+
+@if(session('error'))
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    toastr.error(@json(session('error')));
+});
+</script>
+@endif
+@if(session('success'))
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    toastr.success(@json(session('success')));
+});
+</script>
+@endif
 
 <script>
 // ================================
@@ -1132,6 +1171,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const mobileTotalDisplay = document.getElementById('mobile-total-display');
     const mobileBarTotal = document.getElementById('mobile-bar-total');
     const subtotal = {{ $subtotal }};
+    const discount = {{ $discount ?? 0 }};
 
     let mobileShippingCost = 0;
 
@@ -1217,10 +1257,12 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     function updateMobileTotal() {
-        const total = subtotal + mobileShippingCost;
+        const total = Math.max(0, subtotal - discount) + mobileShippingCost;
         const formattedTotal = '$' + total.toFixed(2);
         mobileTotalDisplay.textContent = formattedTotal;
-        mobileBarTotal.textContent = formattedTotal;
+        if (mobileBarTotal) {
+            mobileBarTotal.textContent = formattedTotal;
+        }
     }
 });
 </script>

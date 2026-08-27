@@ -36,6 +36,10 @@ class Order extends Model
         'transaction_id',
         'guest_email',
         'total',
+        'subtotal',
+        'shipping_cost',
+        'discount',
+        'coupon_code',
         'status',
     ];
 
@@ -53,5 +57,10 @@ class Order extends Model
     public function customer()
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function region()
+    {
+        return $this->belongsTo(ShippingRegion::class, 'region_id');
     }
 }

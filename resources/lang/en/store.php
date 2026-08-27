@@ -337,6 +337,10 @@ return [
         'order_failed' => 'Something went wrong. Please try again.',
         'payment_required' => 'Please select a payment method before continuing.',
         'paypal_instructions' => 'Please complete payment using the PayPal button.',
+        'discount' => 'Discount',
+        'cart_empty' => 'Your cart is empty.',
+        'out_of_stock' => 'The requested quantity of ":name" is no longer available.',
+        'region_invalid' => 'Please select a valid shipping region.',
     ],
 
     'order_confirmation' => [
@@ -360,6 +364,8 @@ return [
         'quantity' => 'Quantity',
         'price' => 'Price',
         'subtotal' => 'Subtotal',
+        'shipping' => 'Shipping',
+        'discount' => 'Discount',
         'total' => 'Total',
         'continue_shopping' => 'Continue Shopping',
     ],

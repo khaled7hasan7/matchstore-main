@@ -374,6 +374,22 @@
                                         @endforelse
                                     </tbody>
                                     <tfoot>
+                                        @if(! is_null($order->subtotal))
+                                            <tr>
+                                                <td colspan="3" class="text-end">{{ __('store.order_confirmation.subtotal') }}:</td>
+                                                <td class="text-end">{{ $currency->symbol }}{{ number_format($order->subtotal, 2) }}</td>
+                                            </tr>
+                                            @if($order->discount > 0)
+                                                <tr class="text-success">
+                                                    <td colspan="3" class="text-end">{{ __('store.order_confirmation.discount') }}@if($order->coupon_code) ({{ $order->coupon_code }})@endif:</td>
+                                                    <td class="text-end">-{{ $currency->symbol }}{{ number_format($order->discount, 2) }}</td>
+                                                </tr>
+                                            @endif
+                                            <tr>
+                                                <td colspan="3" class="text-end">{{ __('store.order_confirmation.shipping') }}:</td>
+                                                <td class="text-end">{{ $currency->symbol }}{{ number_format($order->shipping_cost, 2) }}</td>
+                                            </tr>
+                                        @endif
                                         <tr class="total-row">
                                             <td colspan="3" class="text-end"><strong>{{ __('store.order_confirmation.total') }}:</strong></td>
                                             <td class="text-end"><strong>{{ $currency->symbol }}{{ number_format($order->total, 2) }}</strong></td>
@@ -684,6 +700,22 @@
                         <p class="text-center text-muted">No items found in this order.</p>
                     @endforelse
                 </div>
+                @if(! is_null($order->subtotal))
+                    <div class="mobile-conf-total" style="border-top: none; padding-top: 0;">
+                        <span class="mobile-conf-total-label">{{ __('store.order_confirmation.subtotal') }}</span>
+                        <span>{{ $currency->symbol }}{{ number_format($order->subtotal, 2) }}</span>
+                    </div>
+                    @if($order->discount > 0)
+                        <div class="mobile-conf-total text-success" style="border-top: none; padding-top: 0;">
+                            <span class="mobile-conf-total-label">{{ __('store.order_confirmation.discount') }}@if($order->coupon_code) ({{ $order->coupon_code }})@endif</span>
+                            <span>-{{ $currency->symbol }}{{ number_format($order->discount, 2) }}</span>
+                        </div>
+                    @endif
+                    <div class="mobile-conf-total" style="border-top: none; padding-top: 0;">
+                        <span class="mobile-conf-total-label">{{ __('store.order_confirmation.shipping') }}</span>
+                        <span>{{ $currency->symbol }}{{ number_format($order->shipping_cost, 2) }}</span>
+                    </div>
+                @endif
                 <div class="mobile-conf-total">
                     <span class="mobile-conf-total-label">{{ __('store.order_confirmation.total') }}</span>
                     <span class="mobile-conf-total-value">{{ $currency->symbol }}{{ number_format($order->total, 2) }}</span>

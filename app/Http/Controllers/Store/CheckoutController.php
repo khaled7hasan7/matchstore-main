@@ -2,15 +2,19 @@
 
 namespace App\Http\Controllers\Store;
 
+use App\Exceptions\InsufficientStockException;
 use App\Http\Controllers\Controller;
+use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\PaymentGateway;
 use App\Models\ProductVariant;
+use App\Models\ShippingRegion;
 use App\Services\PaymentGateway\PaymentManager;
 use App\Services\Store\OrderService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 
@@ -18,6 +22,12 @@ class CheckoutController extends Controller
 {
     public function index()
     {
+        $cart = Session::get('cart', []);
+
+        if (empty($cart)) {
+            return redirect()->route('cart.view')->with('error', __('store.checkout.cart_empty'));
+        }
+
         $paymentGateways = PaymentGateway::with('configs')
             ->where('is_active', 1)
             ->get();
@@ -27,23 +37,25 @@ class CheckoutController extends Controller
             ? $paypal->getConfigValue('client_id', 'sandbox')
             : null;
 
-        $cart = Session::get('cart', []);
-        $subtotal = 0;
+        $stripe = $paymentGateways->firstWhere('code', 'stripe');
+        $stripePublicKey = $stripe
+            ? $stripe->getConfigValue('public_key', 'sandbox')
+            : null;
 
-        foreach ($cart as $key => $item) {
-            $product = \App\Models\Product::with(['translations', 'thumbnail'])->find($item['product_id']);
+        $subtotal = collect($cart)->sum(fn ($item) => $item['price'] * $item['quantity']);
 
-            $variant = isset($item['variant_id'])
-                ? ProductVariant::with('images')->find($item['variant_id'])
-                : ProductVariant::where('product_id', $item['product_id'])->where('is_primary', true)->first();
+        $coupon = Session::get('cart_coupon');
+        $discount = $this->couponDiscount($coupon, $subtotal);
 
-            $subtotal += $item['price'] * $item['quantity'];
-        }
-
+        // Shipping is chosen client-side per region; the authoritative cost
+        // is recalculated server-side in process().
         $shipping = null;
-        $total = $subtotal + ($shipping ?? 0);
+        $total = max(0, $subtotal - $discount);
 
-        return view('themes.xylo.checkout', compact('cart', 'subtotal', 'shipping', 'total', 'paymentGateways', 'paypalClientId'));
+        return view('themes.xylo.checkout', compact(
+            'cart', 'subtotal', 'discount', 'coupon', 'shipping', 'total',
+            'paymentGateways', 'paypalClientId', 'stripePublicKey'
+        ));
     }
 
     public function process(Request $request)
@@ -55,61 +67,104 @@ class CheckoutController extends Controller
             'last_name' => 'required|string|max:255',
             'address' => 'required|string|max:500',
             'country' => 'required|string',
-            'region_id' => 'required',
-            'city' => 'required|string|max:255',
-            'zipcode' => 'required|string|max:20',
+            'region_id' => 'required|integer|exists:shipping_regions,id',
+            'city' => 'nullable|string|max:255',
+            'zipcode' => 'nullable|string|max:20',
             'email' => 'required|email|max:255',
             'phone' => 'required|string|max:20',
         ]);
 
         $gatewayCode = $request->input('gateway');
 
-        // Get cart total
         $cart = Session::get('cart', []);
-        $amount = collect($cart)->sum(function ($item) {
-            return $item['price'] * $item['quantity'];
-        });
+
+        if (empty($cart)) {
+            return redirect()->route('cart.view')->with('error', __('store.checkout.cart_empty'));
+        }
+
+        $subtotal = collect($cart)->sum(fn ($item) => $item['price'] * $item['quantity']);
+
+        // Re-validate the coupon at order time — it may have expired since it
+        // was applied to the cart.
+        $coupon = Session::get('cart_coupon');
+        if ($coupon) {
+            $coupon = Coupon::find($coupon->id);
+
+            if (! $coupon || $coupon->isExpired()) {
+                Session::forget('cart_coupon');
+
+                return back()->withInput()->with('error', __('store.cart.coupon_expired'));
+            }
+        }
+        $discount = $this->couponDiscount($coupon, $subtotal);
+
+        // Authoritative shipping cost from the selected region — never trust
+        // the client-side figure.
+        $region = ShippingRegion::where('id', $validated['region_id'])
+            ->where('is_active', true)
+            ->first();
+
+        if (! $region) {
+            return back()->withInput()->with('error', __('store.checkout.region_invalid'));
+        }
+
+        $shippingCost = $region->calculateShipping(1);
+        $amount = max(0, $subtotal - $discount) + $shippingCost;
+        $city = $validated['city'] ?: (app()->getLocale() === 'ar' ? $region->name_ar : $region->name);
 
         try {
             // Handle Cash on Delivery separately
             if ($gatewayCode === 'cod') {
-                // Create order directly for COD
-                $order = Order::create([
-                    'customer_id' => Auth::guard('customer')->id(),
-                    'first_name' => $validated['first_name'],
-                    'last_name' => $validated['last_name'],
-                    'email' => $validated['email'],
-                    'phone' => $validated['phone'],
-                    'address' => $validated['address'],
-                    'suite' => $request->input('suite'),
-                    'country' => $validated['country'],
-                    'region_id' => $validated['region_id'],
-                    'city' => $validated['city'],
-                    'zipcode' => $validated['zipcode'],
-                    'payment_method' => 'cod',
-                    'payment_status' => 'pending',
-                    'total' => $amount,
-                    'status' => 'pending',
-                ]);
+                try {
+                    $order = DB::transaction(function () use ($validated, $request, $cart, $subtotal, $discount, $coupon, $region, $shippingCost, $amount, $city) {
+                        $this->reserveStock($cart);
 
-                // Save Order Items
-                foreach ($cart as $item) {
-                    OrderDetail::create([
-                        'order_id' => $order->id,
-                        'product_id' => $item['product_id'],
-                        'variant_id' => $item['variant_id'] ?? null,
-                        'quantity' => $item['quantity'],
-                        'price' => $item['price'],
-                        'attributes' => json_encode($item['attributes'] ?? []),
-                    ]);
+                        $order = Order::create([
+                            'customer_id' => Auth::guard('customer')->id(),
+                            'guest_email' => Auth::guard('customer')->check() ? null : $validated['email'],
+                            'first_name' => $validated['first_name'],
+                            'last_name' => $validated['last_name'],
+                            'email' => $validated['email'],
+                            'phone' => $validated['phone'],
+                            'address' => $validated['address'],
+                            'suite' => $request->input('suite'),
+                            'country' => $validated['country'],
+                            'region_id' => $region->id,
+                            'city' => $city,
+                            'zipcode' => $validated['zipcode'] ?? '',
+                            'payment_method' => 'cod',
+                            'payment_status' => 'pending',
+                            'subtotal' => $subtotal,
+                            'shipping_cost' => $shippingCost,
+                            'discount' => $discount,
+                            'coupon_code' => $coupon->code ?? null,
+                            'total' => $amount,
+                            'status' => 'pending',
+                        ]);
+
+                        foreach ($cart as $item) {
+                            OrderDetail::create([
+                                'order_id' => $order->id,
+                                'product_id' => $item['product_id'],
+                                'variant_id' => $item['variant_id'] ?? null,
+                                'quantity' => $item['quantity'],
+                                'price' => $item['price'],
+                                'attributes' => json_encode($item['attributes'] ?? []),
+                            ]);
+                        }
+
+                        return $order;
+                    });
+                } catch (InsufficientStockException $e) {
+                    return back()->withInput()->with('error', __('store.checkout.out_of_stock', ['name' => $e->itemName]));
                 }
 
-                // Clear the cart
-                Session::forget('cart');
+                Session::forget(['cart', 'cart_count', 'cart_coupon']);
+                // Lets a guest view the confirmation page for this order only
+                Session::put('last_order_id', $order->id);
 
-                // Redirect to order confirmation page
                 return redirect()->route('order.confirmation', ['orderId' => $order->id])
-                    ->with('success', 'Order placed successfully! Pay with cash on delivery.');
+                    ->with('success', __('store.checkout.order_success'));
             }
 
             // Handle other payment gateways (PayPal, Stripe, etc.)
@@ -129,6 +184,42 @@ class CheckoutController extends Controller
                 'message' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Lock the cart's variants, verify availability and decrement stock.
+     * Must run inside a database transaction.
+     */
+    protected function reserveStock(array $cart): void
+    {
+        foreach ($cart as $item) {
+            if (empty($item['variant_id'])) {
+                continue;
+            }
+
+            $variant = ProductVariant::whereKey($item['variant_id'])
+                ->lockForUpdate()
+                ->first();
+
+            if (! $variant || $variant->stock < $item['quantity']) {
+                throw new InsufficientStockException($item['variant_name'] ?? '#'.$item['product_id']);
+            }
+
+            $variant->decrement('stock', $item['quantity']);
+        }
+    }
+
+    protected function couponDiscount(?Coupon $coupon, float $subtotal): float
+    {
+        if (! $coupon) {
+            return 0.0;
+        }
+
+        if ($coupon->type === 'percentage') {
+            return round($subtotal * ($coupon->discount / 100), 2);
+        }
+
+        return round(min($coupon->discount, $subtotal), 2);
     }
 
     /**
@@ -179,5 +270,4 @@ class CheckoutController extends Controller
             'message' => 'Payment was cancelled by user.',
         ]);
     }
-
 }

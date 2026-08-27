@@ -4,17 +4,23 @@ namespace App\Http\Controllers\Store;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
-use Illuminate\Http\Request;
 
 class OrderConfirmationController extends Controller
 {
     public function show($orderId)
     {
-        $order = Order::with(['details.product.translations', 'customer'])
+        $order = Order::with(['details.product.translations', 'customer', 'region'])
             ->findOrFail($orderId);
 
-        // Verify the order belongs to the current customer
-        if ($order->customer_id !== auth('customer')->id()) {
+        // A customer may only view their own orders; a guest may only view
+        // the order they just placed in this session.
+        $isOwner = auth('customer')->check()
+            && $order->customer_id === auth('customer')->id();
+
+        $isGuestOrder = $order->customer_id === null
+            && (int) session('last_order_id') === (int) $order->id;
+
+        if (! $isOwner && ! $isGuestOrder) {
             abort(403, 'Unauthorized access to this order.');
         }
 

@@ -337,6 +337,10 @@ return [
         'order_failed' => 'حدث خطأ ما. يرجى المحاولة مرة أخرى.',
         'payment_required' => 'يرجى اختيار طريقة الدفع قبل المتابعة.',
         'paypal_instructions' => 'يرجى إتمام الدفع باستخدام زر باي بال.',
+        'discount' => 'الخصم',
+        'cart_empty' => 'سلة التسوق فارغة.',
+        'out_of_stock' => 'الكمية المطلوبة من «:name» لم تعد متوفرة.',
+        'region_invalid' => 'يرجى اختيار منطقة شحن صحيحة.',
     ],
 
     'order_confirmation' => [
@@ -360,6 +364,8 @@ return [
         'quantity' => 'الكمية',
         'price' => 'السعر',
         'subtotal' => 'المجموع الفرعي',
+        'shipping' => 'الشحن',
+        'discount' => 'الخصم',
         'total' => 'الإجمالي',
         'continue_shopping' => 'متابعة التسوق',
     ],
