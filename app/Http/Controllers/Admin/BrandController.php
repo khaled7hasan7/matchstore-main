@@ -41,7 +41,7 @@ class BrandController extends Controller
     public function store(Request $request)
     {
         $rules = [
-            'logo_url' => 'nullable|file|image|mimes:jpeg,png,jpg,gif,svg,webp|max:10000',
+            'logo_url' => 'nullable|file|image|mimes:jpeg,png,jpg,gif,webp|max:10000',
             'translations' => 'required|array',
         ];
 
@@ -73,7 +73,7 @@ class BrandController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'logo_url' => 'nullable|file|image|mimes:jpeg,png,jpg,gif,svg|max:10000',
+            'logo_url' => 'nullable|file|image|mimes:jpeg,png,jpg,gif,webp|max:10000',
             'translations' => 'required|array',
         ]);
 

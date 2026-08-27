@@ -35,9 +35,9 @@ class BannerService
             $rules["languages.$code.title"] = 'required|string|max:255';
 
             if ($code === $defaultLang) {
-                $rules["languages.$code.image"] = 'required|image|mimes:jpeg,png,jpg,gif,svg,webp|max:10000';
+                $rules["languages.$code.image"] = 'required|image|mimes:jpeg,png,jpg,gif,webp|max:10000';
             } else {
-                $rules["languages.$code.image"] = 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:10000';
+                $rules["languages.$code.image"] = 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10000';
             }
 
             $rules["languages.$code.description"] = 'required|string|min:3';
@@ -79,7 +79,7 @@ class BannerService
     {
         $request->validate([
             'languages.*.title' => 'required|string|max:255',
-            'languages.*.image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10000',
+            'languages.*.image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10000',
             'type' => 'required|in:promotion,sale,seasonal,featured,announcement',
         ]);
 
