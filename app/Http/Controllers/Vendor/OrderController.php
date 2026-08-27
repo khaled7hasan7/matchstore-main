@@ -60,9 +60,26 @@ class OrderController extends Controller
     {
         $vendorId = Auth::guard('vendor')->id();
 
-        $order = Order::whereHas('details.product', function ($query) use ($vendorId) {
-            $query->where('vendor_id', $vendorId);
-        })->findOrFail($id);
+        // A vendor may only delete an order when every line item is one of
+        // their own products; orders shared with other vendors (or with
+        // admin products) belong to the marketplace, not to them.
+        $order = Order::where('id', $id)
+            ->whereHas('details.product', function ($query) use ($vendorId) {
+                $query->where('vendor_id', $vendorId);
+            })
+            ->whereDoesntHave('details.product', function ($query) use ($vendorId) {
+                $query->where(function ($q) use ($vendorId) {
+                    $q->where('vendor_id', '!=', $vendorId)->orWhereNull('vendor_id');
+                });
+            })
+            ->first();
+
+        if (! $order) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You can only delete orders that contain your own products exclusively.',
+            ], 403);
+        }
 
         $order->delete();
 
