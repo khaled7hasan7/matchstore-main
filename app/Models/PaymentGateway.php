@@ -21,9 +21,20 @@ class PaymentGateway extends Model
         return $this->hasMany(PaymentGatewayConfig::class, 'gateway_id');
     }
 
-    public function getConfigValue($key, $default = null)
+    /**
+     * Read a config value, optionally scoped to an environment
+     * (e.g. 'sandbox' or 'live') so live keys can never be picked up
+     * while running in sandbox mode, and vice versa.
+     */
+    public function getConfigValue($key, $environment = null, $default = null)
     {
-        $config = $this->configs->where('key_name', $key)->first();
+        $configs = $this->configs->where('key_name', $key);
+
+        if ($environment !== null) {
+            $configs = $configs->where('environment', $environment);
+        }
+
+        $config = $configs->first();
 
         return $config ? $config->key_value : $default;
     }

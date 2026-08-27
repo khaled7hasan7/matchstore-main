@@ -66,11 +66,13 @@ class PaymentGatewayController extends Controller
                 $config = $gateway->configs()->find($configId);
 
                 if ($config) {
+                    // is_encrypted must be assigned before key_value so the
+                    // key_value mutator sees the new flag when encrypting
                     $config->update([
                         'key_name' => $configData['key_name'],
-                        'key_value' => $configData['key_value'],
                         'is_encrypted' => isset($configData['is_encrypted']),
                         'environment' => $configData['environment'],
+                        'key_value' => $configData['key_value'],
                     ]);
                 }
             }
