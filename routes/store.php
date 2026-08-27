@@ -7,7 +7,6 @@ use App\Http\Controllers\Store\Auth\RegisterController;
 use App\Http\Controllers\Store\Auth\ResetPasswordController;
 use App\Http\Controllers\Store\CartController;
 use App\Http\Controllers\Store\CategoryController;
-use App\Http\Controllers\Store\CheckoutController;
 use App\Http\Controllers\Store\CurrencyController;
 use App\Http\Controllers\Store\Customer\AddressController;
 use App\Http\Controllers\Store\Customer\OrderController;
@@ -44,8 +43,7 @@ Route::get('/search', [SearchController::class, 'searchResults']);
 
 Route::get('/get-variant-price', [ProductController::class, 'getVariantPrice'])->name('product.variant.price');
 
-Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+// Checkout routes live in routes/web.php (checkout.index / checkout.process)
 
 // Order confirmation
 Route::get('/order-confirmation/{orderId}', [OrderConfirmationController::class, 'show'])->name('order.confirmation');
