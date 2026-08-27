@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class MatchStore extends Command
 {
@@ -84,18 +85,24 @@ class MatchStore extends Command
      */
     protected function createAdminUser()
     {
+        $password = Str::password(16);
+
         $user = User::firstOrCreate(
             ['email' => 'admin@example.com'],
             [
                 'name' => 'Admin User',
                 'email' => 'admin@example.com',
-                'password' => Hash::make('abc123'),
+                'password' => Hash::make($password),
                 'profile_image' => 'https://i.postimg.cc/1t3RZtmT/images-9.jpg',
             ]
         );
 
+        $user->forceFill(['role' => User::ROLE_ADMIN])->save();
+
         if ($user->wasRecentlyCreated) {
-            $this->info('Admin user created successfully.');
+            $this->info('Admin user created successfully: admin@example.com');
+            $this->warn("Generated admin password: {$password}");
+            $this->warn('Store this password now — it will not be shown again.');
         } else {
             $this->info('Admin user already exists.');
         }

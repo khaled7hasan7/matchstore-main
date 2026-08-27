@@ -50,9 +50,11 @@ Route::get('/login', function () {
     return redirect()->route('customer.login');
 });
 
-Auth::routes();
+// Public registration is disabled: accounts in the users table are staff
+// accounts and must only be created by an existing admin or the installer.
+Auth::routes(['register' => false]);
 
-Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
 
     /* Dashboard */
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
@@ -180,12 +182,13 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::patch('subscribers/{id}/status', [SubscriberController::class, 'updateStatus'])->name('subscribers.update-status');
     Route::get('subscribers/compose', [SubscriberController::class, 'compose'])->name('subscribers.compose');
     Route::post('subscribers/send', [SubscriberController::class, 'send'])->name('subscribers.send');
-});
 
-Route::get('site-settings', [SiteSettingsController::class, 'index'])->name('admin.site-settings.index');
-Route::get('site-settings/edit', [SiteSettingsController::class, 'edit'])->name('admin.site-settings.edit');
-Route::put('site-settings/update', [SiteSettingsController::class, 'update'])->name('admin.site-settings.update');
-Route::post('site-settings/theme', [SiteSettingsController::class, 'updateTheme'])->name('admin.site-settings.theme.update');
+    /* Site Settings */
+    Route::get('site-settings', [SiteSettingsController::class, 'index'])->name('site-settings.index');
+    Route::get('site-settings/edit', [SiteSettingsController::class, 'edit'])->name('site-settings.edit');
+    Route::put('site-settings/update', [SiteSettingsController::class, 'update'])->name('site-settings.update');
+    Route::post('site-settings/theme', [SiteSettingsController::class, 'updateTheme'])->name('site-settings.theme.update');
+});
 
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
 Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');

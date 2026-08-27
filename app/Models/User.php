@@ -12,8 +12,15 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    public const ROLE_ADMIN = 'admin';
+
+    public const ROLE_USER = 'user';
+
     /**
      * The attributes that are mass assignable.
+     *
+     * "role" is intentionally not fillable so it can never be set through
+     * mass assignment — grant it explicitly via forceFill().
      *
      * @var array<int, string>
      */
@@ -44,4 +51,9 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    public function isAdmin(): bool
+    {
+        return $this->role === self::ROLE_ADMIN;
+    }
 }
