@@ -24,12 +24,13 @@ class ReviewController extends Controller
             return back()->with('error', __('store.product_detail.review_already_submitted'));
         }
 
+        // Reviews go live only after an admin approves them
         ProductReview::create([
             'customer_id' => Auth::guard('customer')->id(),
             'product_id' => $request->product_id,
             'rating' => $request->rating,
             'review' => $request->review,
-            'is_approved' => 1,
+            'is_approved' => 0,
         ]);
 
         return back()->with('success', __('store.product_detail.review_success'));

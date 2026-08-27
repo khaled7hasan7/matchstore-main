@@ -53,7 +53,9 @@ Route::get('/order-confirmation/{orderId}', [OrderConfirmationController::class,
 // Category page
 Route::get('/category/{slug}', [CategoryController::class, 'show'])->name('category.show');
 
-Route::post('/product/review/store', [ReviewController::class, 'store'])->name('review.store');
+Route::post('/product/review/store', [ReviewController::class, 'store'])
+    ->middleware(['auth.customer', 'throttle:10,1'])
+    ->name('review.store');
 
 Route::prefix('customer')->name('customer.')->group(function () {
 
