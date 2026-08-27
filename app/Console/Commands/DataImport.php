@@ -7,6 +7,7 @@ use App\Models\StoreSetting;
 use App\Models\Vendor;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class DataImport extends Command
 {
@@ -64,16 +65,23 @@ class DataImport extends Command
 
     protected function createCategoriesAndProducts()
     {
+        $password = Str::password(16);
+
         $seller = Vendor::firstOrCreate(
             ['email' => 'seller@example.com'],
             [
                 'name' => 'Seller',
                 'email' => 'seller@example.com',
-                'password' => Hash::make('abc123'),
+                'password' => Hash::make($password),
                 'phone' => '+923001234567',
                 'profile_image' => 'https://i.postimg.cc/FHxQs4Br/images-10.jpg',
             ]
         );
+
+        if ($seller->wasRecentlyCreated) {
+            $this->warn("Demo seller created: seller@example.com / {$password}");
+            $this->warn('Store this password now — it will not be shown again.');
+        }
 
         $shop = Shop::firstOrCreate(
             ['name' => 'Soft Shoes'],

@@ -79,8 +79,6 @@ class ProductRepository implements ProductRepositoryInterface
 
     public function update($id, array $data)
     {
-        \Log::info('Attempting to update product with ID '.$id, ['data' => $data]);
-
         $product = Product::findOrFail($id);
 
         if (isset($data['image_url']) && $data['image_url'] instanceof \Illuminate\Http\UploadedFile) {
@@ -134,9 +132,7 @@ class ProductRepository implements ProductRepositoryInterface
             'product_type' => $data['product_type'],
         ]);
 
-        if ($updated) {
-            \Log::info('Product updated successfully with ID '.$id);
-        } else {
+        if (! $updated) {
             \Log::error('Failed to update product with ID '.$id);
         }
 

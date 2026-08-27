@@ -99,15 +99,6 @@ class SiteSettingsController extends Controller
 
     public function updateTheme(Request $request)
     {
-        // DEBUG: Log incoming request data
-        \Log::info('=== THEME UPDATE DEBUG ===');
-        \Log::info('All Request Data:', $request->all());
-        \Log::info('Has theme_custom_enabled:', [
-            'has' => $request->has('theme_custom_enabled'),
-            'value' => $request->theme_custom_enabled,
-            'input' => $request->input('theme_custom_enabled')
-        ]);
-
         $request->validate([
             'theme_preset' => 'required|string|in:' . implode(',', array_keys(config('theme.presets'))),
             'theme_custom_enabled' => 'nullable|in:1',
@@ -121,27 +112,20 @@ class SiteSettingsController extends Controller
         ]);
 
         // Save preset selection
-        $presetSaved = StoreSetting::updateOrCreate(
+        StoreSetting::updateOrCreate(
             ['key' => 'theme_preset'],
             ['value' => $request->theme_preset]
         );
-        \Log::info('Preset saved:', ['preset' => $request->theme_preset, 'saved' => $presetSaved->wasRecentlyCreated]);
 
         // Save custom enabled flag (checkbox: 1 if checked, null if unchecked)
         $customEnabled = $request->has('theme_custom_enabled') && $request->theme_custom_enabled == '1';
-        $customSaved = StoreSetting::updateOrCreate(
+        StoreSetting::updateOrCreate(
             ['key' => 'theme_custom_enabled'],
             ['value' => $customEnabled ? '1' : '0']
         );
-        \Log::info('Custom enabled saved:', [
-            'customEnabled' => $customEnabled,
-            'value_saved' => $customEnabled ? '1' : '0',
-            'wasNew' => $customSaved->wasRecentlyCreated
-        ]);
 
         // Save custom colors if custom mode is enabled
         if ($customEnabled) {
-            \Log::info('Saving custom colors...');
             $customColors = [
                 'theme_primary_color',
                 'theme_primary_light_color',
@@ -154,19 +138,15 @@ class SiteSettingsController extends Controller
 
             foreach ($customColors as $colorKey) {
                 if ($request->filled($colorKey)) {
-                    $saved = StoreSetting::updateOrCreate(
+                    StoreSetting::updateOrCreate(
                         ['key' => $colorKey],
                         ['value' => $request->$colorKey]
                     );
-                    \Log::info("Saved {$colorKey}:", ['value' => $request->$colorKey]);
                 }
             }
-        } else {
-            \Log::info('Custom colors NOT enabled, skipping color save');
         }
 
         // Clear theme cache - must clear both the combined cache and individual setting caches
-        \Log::info('Clearing all theme caches...');
         Cache::forget('active_theme_colors');
         Cache::forget('store_setting_theme_preset');
         Cache::forget('store_setting_theme_custom_enabled');
@@ -177,16 +157,6 @@ class SiteSettingsController extends Controller
         Cache::forget('store_setting_theme_card_background_color');
         Cache::forget('store_setting_theme_text_color');
         Cache::forget('store_setting_theme_border_color');
-
-        // Verify what's in DB after save
-        $verifyPreset = StoreSetting::where('key', 'theme_preset')->first();
-        $verifyCustom = StoreSetting::where('key', 'theme_custom_enabled')->first();
-        \Log::info('Verification after save:', [
-            'theme_preset' => $verifyPreset ? $verifyPreset->value : 'NULL',
-            'theme_custom_enabled' => $verifyCustom ? $verifyCustom->value : 'NULL'
-        ]);
-
-        \Log::info('=== END THEME UPDATE DEBUG ===');
 
         // Return JSON for AJAX requests, redirect for regular form submissions
         if ($request->expectsJson() || $request->ajax()) {

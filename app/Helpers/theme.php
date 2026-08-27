@@ -18,14 +18,9 @@ if (!function_exists('getActiveThemeColors')) {
         return Cache::rememberForever('active_theme_colors', function () {
             $customEnabled = getWebConfig('theme_custom_enabled', '0') === '1';
 
-            \Log::info('[THEME HELPER] getActiveThemeColors called', [
-                'custom_enabled_raw' => getWebConfig('theme_custom_enabled', '0'),
-                'custom_enabled_bool' => $customEnabled
-            ]);
-
             if ($customEnabled) {
                 // Return custom colors
-                $colors = [
+                return [
                     'primary' => getWebConfig('theme_primary_color', '#000000'),
                     'primary_light' => getWebConfig('theme_primary_light_color', '#777777'),
                     'secondary' => getWebConfig('theme_secondary_color', '#333333'),
@@ -34,21 +29,13 @@ if (!function_exists('getActiveThemeColors')) {
                     'text' => getWebConfig('theme_text_color', '#111111'),
                     'border' => getWebConfig('theme_border_color', '#bbbbbb'),
                 ];
-                \Log::info('[THEME HELPER] Returning custom colors', $colors);
-                return $colors;
             }
 
             // Return preset theme colors
             $presetKey = getWebConfig('theme_preset', 'default');
             $presets = config('theme.presets');
-            $colors = $presets[$presetKey] ?? $presets['default'];
 
-            \Log::info('[THEME HELPER] Returning preset colors', [
-                'preset_key' => $presetKey,
-                'colors' => $colors
-            ]);
-
-            return $colors;
+            return $presets[$presetKey] ?? $presets['default'];
         });
     }
 }
