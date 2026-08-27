@@ -3,8 +3,12 @@
 namespace App\Http\Controllers\Store;
 
 use App\Http\Controllers\Controller;
+use App\Mail\ContactMessageMail;
 use App\Models\Contact;
+use App\Models\SiteSetting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class ContactController extends Controller
 {
@@ -23,7 +27,22 @@ class ContactController extends Controller
             'message' => 'required|string|max:2000',
         ]);
 
-        Contact::create($validated);
+        $contact = Contact::create($validated);
+
+        // Notify the store inbox; a mail failure must not hide the message —
+        // it is already stored and visible in the admin panel.
+        try {
+            $siteSettings = SiteSetting::first();
+            $adminEmail = $siteSettings->contact_email ?? config('mail.from.address');
+
+            if ($adminEmail) {
+                $storeName = $siteSettings->site_name ?? config('app.name');
+                Mail::to($adminEmail)
+                    ->send((new ContactMessageMail($contact, $storeName))->locale(app()->getLocale()));
+            }
+        } catch (\Throwable $e) {
+            Log::error('Contact form mail failed: '.$e->getMessage());
+        }
 
         return redirect()->back()->with('success', __('store.contact.success_message'));
     }

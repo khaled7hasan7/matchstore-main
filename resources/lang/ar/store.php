@@ -343,6 +343,48 @@ return [
         'region_invalid' => 'يرجى اختيار منطقة شحن صحيحة.',
     ],
 
+    'emails' => [
+        'greeting' => 'مرحباً :name،',
+        'item' => 'المنتج',
+        'qty' => 'الكمية',
+        'price' => 'السعر',
+        'line_total' => 'الإجمالي',
+        'subtotal' => 'المجموع الفرعي',
+        'discount' => 'الخصم',
+        'shipping' => 'الشحن',
+        'total' => 'الإجمالي',
+        'shipping_address' => 'عنوان الشحن',
+        'estimated_delivery' => 'التوصيل المتوقع خلال :days أيام',
+        'order_number' => 'رقم الطلب',
+        'order_date' => 'تاريخ الطلب',
+        'payment_method' => 'طريقة الدفع',
+        'cod' => 'الدفع عند الاستلام',
+        'customer' => 'العميل',
+
+        'confirmation_subject' => 'تأكيد الطلب #:id — :store',
+        'confirmation_heading' => 'تأكيد الطلب',
+        'confirmation_intro' => 'شكراً لطلبك! تم استلام الطلب #:id وجارٍ تجهيزه.',
+        'confirmation_footer' => 'الدفع نقداً عند الاستلام. لأي استفسار يمكنك الرد على هذه الرسالة مباشرة.',
+
+        'admin_subject' => 'طلب جديد #:id — :store',
+        'admin_heading' => 'وصل طلب جديد',
+        'admin_intro' => 'تم تسجيل طلب جديد #:id في المتجر.',
+
+        'vendor_subject' => 'طلب جديد يتضمن منتجاتك #:id — :store',
+        'vendor_heading' => 'طلب جديد لمنتجاتك',
+        'vendor_intro' => 'الطلب #:id يتضمن المنتجات التالية من متجرك، يرجى تجهيزها للشحن.',
+        'vendor_items_total' => 'إجمالي منتجاتك',
+        'vendor_footer' => 'ادخل إلى لوحة البائع للاطلاع على كامل التفاصيل.',
+
+        'contact_subject' => 'رسالة تواصل جديدة: :subject — :store',
+        'contact_heading' => 'رسالة جديدة من نموذج التواصل',
+        'contact_name' => 'الاسم',
+        'contact_email' => 'البريد الإلكتروني',
+        'contact_phone' => 'الهاتف',
+        'contact_subject_label' => 'الموضوع',
+        'contact_footer' => 'يمكنك الرد على هذه الرسالة مباشرة للتواصل مع المرسل.',
+    ],
+
     'order_confirmation' => [
         'thank_you' => 'شكراً لك!',
         'order_received' => 'تم استلام طلبك وجاري معالجته.',

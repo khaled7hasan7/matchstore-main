@@ -4,18 +4,23 @@ namespace App\Http\Controllers\Store;
 
 use App\Exceptions\InsufficientStockException;
 use App\Http\Controllers\Controller;
+use App\Mail\NewOrderAdminMail;
+use App\Mail\OrderConfirmationMail;
+use App\Mail\VendorOrderMail;
 use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\PaymentGateway;
 use App\Models\ProductVariant;
 use App\Models\ShippingRegion;
+use App\Models\SiteSetting;
 use App\Services\PaymentGateway\PaymentManager;
 use App\Services\Store\OrderService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Session;
 
 class CheckoutController extends Controller
@@ -163,6 +168,8 @@ class CheckoutController extends Controller
                 // Lets a guest view the confirmation page for this order only
                 Session::put('last_order_id', $order->id);
 
+                $this->sendOrderMails($order);
+
                 return redirect()->route('order.confirmation', ['orderId' => $order->id])
                     ->with('success', __('store.checkout.order_success'));
             }
@@ -183,6 +190,60 @@ class CheckoutController extends Controller
                 'success' => false,
                 'message' => $e->getMessage(),
             ], 500);
+        }
+    }
+
+    /**
+     * Queue the order emails: confirmation to the customer, a notification
+     * to the store admin, and one per vendor with only their items.
+     *
+     * Mail must never break a placed order — every dispatch is guarded and
+     * failures are only logged.
+     */
+    protected function sendOrderMails(Order $order): void
+    {
+        $order->load(['details.product.translations', 'details.product.vendor', 'region']);
+
+        $locale = app()->getLocale();
+        $siteSettings = SiteSetting::first();
+        $storeName = $siteSettings->site_name ?? config('app.name');
+        $symbol = activeCurrency()->symbol ?? '$';
+
+        try {
+            Mail::to($order->email)
+                ->send((new OrderConfirmationMail($order, $symbol, $storeName))->locale($locale));
+        } catch (\Throwable $e) {
+            Log::error("Order #{$order->id}: confirmation mail failed: ".$e->getMessage());
+        }
+
+        try {
+            $adminEmail = $siteSettings->contact_email ?? config('mail.from.address');
+
+            if ($adminEmail) {
+                Mail::to($adminEmail)
+                    ->send((new NewOrderAdminMail($order, $symbol, $storeName))->locale($locale));
+            }
+        } catch (\Throwable $e) {
+            Log::error("Order #{$order->id}: admin mail failed: ".$e->getMessage());
+        }
+
+        foreach ($order->details->groupBy(fn ($detail) => $detail->product?->vendor_id) as $vendorId => $details) {
+            if (! $vendorId) {
+                continue;
+            }
+
+            $vendor = $details->first()->product->vendor;
+
+            if (! $vendor || ! $vendor->email) {
+                continue;
+            }
+
+            try {
+                Mail::to($vendor->email)
+                    ->send((new VendorOrderMail($order, $vendor, $details, $symbol, $storeName))->locale($locale));
+            } catch (\Throwable $e) {
+                Log::error("Order #{$order->id}: vendor mail failed for vendor {$vendorId}: ".$e->getMessage());
+            }
         }
     }
 

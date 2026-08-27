@@ -105,7 +105,7 @@ Route::get('/page/{slug}', [App\Http\Controllers\Store\PageController::class, 's
 
 /* Contact */
 Route::get('/contact', [App\Http\Controllers\Store\ContactController::class, 'index'])->name('contact.index');
-Route::post('/contact', [App\Http\Controllers\Store\ContactController::class, 'store'])->name('contact.store');
+Route::post('/contact', [App\Http\Controllers\Store\ContactController::class, 'store'])->middleware('throttle:5,1')->name('contact.store');
 
 /* Newsletter */
 Route::post('/newsletter/subscribe', [App\Http\Controllers\Store\NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');

@@ -343,6 +343,48 @@ return [
         'region_invalid' => 'Please select a valid shipping region.',
     ],
 
+    'emails' => [
+        'greeting' => 'Hello :name,',
+        'item' => 'Item',
+        'qty' => 'Qty',
+        'price' => 'Price',
+        'line_total' => 'Total',
+        'subtotal' => 'Subtotal',
+        'discount' => 'Discount',
+        'shipping' => 'Shipping',
+        'total' => 'Total',
+        'shipping_address' => 'Shipping Address',
+        'estimated_delivery' => 'Estimated delivery: :days days',
+        'order_number' => 'Order Number',
+        'order_date' => 'Order Date',
+        'payment_method' => 'Payment Method',
+        'cod' => 'Cash on Delivery',
+        'customer' => 'Customer',
+
+        'confirmation_subject' => 'Order #:id confirmed — :store',
+        'confirmation_heading' => 'Order Confirmation',
+        'confirmation_intro' => 'Thank you for your order! Order #:id has been received and is being processed.',
+        'confirmation_footer' => 'You will pay in cash upon delivery. If you have any questions, simply reply to this email.',
+
+        'admin_subject' => 'New order #:id — :store',
+        'admin_heading' => 'New order received',
+        'admin_intro' => 'A new order #:id has been placed on the store.',
+
+        'vendor_subject' => 'New order #:id includes your products — :store',
+        'vendor_heading' => 'New order for your products',
+        'vendor_intro' => 'Order #:id includes the following items from your catalog. Please prepare them for shipping.',
+        'vendor_items_total' => 'Your items total',
+        'vendor_footer' => 'Log in to your seller dashboard for the full details.',
+
+        'contact_subject' => 'New contact message: :subject — :store',
+        'contact_heading' => 'New contact form message',
+        'contact_name' => 'Name',
+        'contact_email' => 'Email',
+        'contact_phone' => 'Phone',
+        'contact_subject_label' => 'Subject',
+        'contact_footer' => 'Reply directly to this email to answer the sender.',
+    ],
+
     'order_confirmation' => [
         'thank_you' => 'Thank You!',
         'order_received' => 'Your order has been received and is being processed.',

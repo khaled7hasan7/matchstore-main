@@ -2,6 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Mail\NewOrderAdminMail;
+use App\Mail\OrderConfirmationMail;
+use App\Mail\VendorOrderMail;
 use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\Product;
@@ -9,10 +12,12 @@ use App\Models\ProductTranslation;
 use App\Models\ProductVariant;
 use App\Models\ShippingRegion;
 use App\Models\Shop;
+use App\Models\SiteSetting;
 use App\Models\User;
 use App\Models\Vendor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class CheckoutTest extends TestCase
@@ -268,5 +273,61 @@ class CheckoutTest extends TestCase
             ->assertRedirect(route('cart.view'));
 
         $this->assertSame(0, Order::count());
+    }
+
+    public function test_order_emails_are_queued_to_customer_admin_and_vendor(): void
+    {
+        Mail::fake();
+
+        SiteSetting::create([
+            'site_name' => 'مكتبة ابن تيمية',
+            'contact_email' => 'admin@store.local',
+        ]);
+
+        $this->addToCart(1);
+        $this->post(route('checkout.process'), $this->checkoutPayload());
+
+        $this->assertNotNull(Order::first());
+
+        Mail::assertQueued(OrderConfirmationMail::class, fn ($mail) => $mail->hasTo('guest@test.local'));
+        Mail::assertQueued(NewOrderAdminMail::class, fn ($mail) => $mail->hasTo('admin@store.local'));
+        Mail::assertQueued(VendorOrderMail::class, fn ($mail) => $mail->hasTo('vendor@test.local'));
+    }
+
+    public function test_order_emails_render_with_items_and_totals(): void
+    {
+        $this->addToCart(2);
+        $this->post(route('checkout.process'), $this->checkoutPayload());
+
+        $order = Order::first();
+        $order->load(['details.product.translations', 'details.product.vendor', 'region']);
+
+        $confirmation = (new OrderConfirmationMail($order, '$', 'Test Store'))->render();
+        $this->assertStringContainsString('Test Book', $confirmation);
+        $this->assertStringContainsString('Amman', $confirmation);
+        $this->assertStringContainsString(number_format($order->total, 2), $confirmation);
+
+        $admin = (new NewOrderAdminMail($order, '$', 'Test Store'))->render();
+        $this->assertStringContainsString('Test Book', $admin);
+        $this->assertStringContainsString($order->email, $admin);
+
+        $vendorMail = (new VendorOrderMail($order, Vendor::first(), $order->details, '$', 'Test Store'))->render();
+        $this->assertStringContainsString('Test Book', $vendorMail);
+        $this->assertStringContainsString(number_format($order->subtotal, 2), $vendorMail);
+    }
+
+    public function test_mail_failure_does_not_break_checkout(): void
+    {
+        // No SMTP is configured and the mailer will fail hard — the order
+        // must still be placed and the customer redirected normally.
+        config(['mail.default' => 'smtp', 'mail.mailers.smtp.host' => 'invalid.host.test', 'mail.mailers.smtp.timeout' => 1]);
+
+        $this->addToCart(1);
+
+        $response = $this->post(route('checkout.process'), $this->checkoutPayload());
+
+        $order = Order::first();
+        $this->assertNotNull($order, 'Order must survive mail failure');
+        $response->assertRedirect(route('order.confirmation', ['orderId' => $order->id]));
     }
 }
