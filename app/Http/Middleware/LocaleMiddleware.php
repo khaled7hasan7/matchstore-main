@@ -18,10 +18,16 @@ class LocaleMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Get site settings once
-        $siteSettings = Cache::remember('site_settings', 3600, function () {
-            return SiteSetting::first();
-        });
+        // Get site settings once. This middleware runs on every web request,
+        // so a database failure must degrade to the built-in defaults instead
+        // of taking the whole site down.
+        try {
+            $siteSettings = Cache::remember('site_settings', 3600, function () {
+                return SiteSetting::first();
+            });
+        } catch (\Throwable $e) {
+            $siteSettings = null;
+        }
 
         // If locale is already set in session, use it
         if (session()->has('locale')) {

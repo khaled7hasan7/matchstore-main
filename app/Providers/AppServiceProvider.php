@@ -78,11 +78,18 @@ class AppServiceProvider extends ServiceProvider
             return $this->orWhere($column, $operator, $value);
         });
 
-        // Share site settings with all views
+        // Share site settings with all views. This runs for every view —
+        // including the error pages — so a database failure here must never
+        // throw, or Laravel's error page cannot render and the visitor gets
+        // a bare server error instead of the real message.
         View::composer('*', function ($view) {
-            $siteSettings = Cache::remember('site_settings', 3600, function () {
-                return SiteSetting::first();
-            });
+            try {
+                $siteSettings = Cache::remember('site_settings', 3600, function () {
+                    return SiteSetting::first();
+                });
+            } catch (\Throwable $e) {
+                $siteSettings = null;
+            }
 
             // Make site settings available as 'siteSettings' in all views
             $view->with('siteSettings', $siteSettings);

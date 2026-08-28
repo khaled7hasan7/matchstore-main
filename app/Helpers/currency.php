@@ -34,25 +34,58 @@ if (! function_exists('currency_to_usd')) {
 if (! function_exists('getWebConfig')) {
     function getWebConfig($key, $default = null)
     {
-        return Cache::rememberForever("store_setting_{$key}", function () use ($key, $default) {
-            return StoreSetting::where('key', $key)->value('value') ?? $default;
-        });
+        try {
+            return Cache::rememberForever("store_setting_{$key}", function () use ($key, $default) {
+                return StoreSetting::where('key', $key)->value('value') ?? $default;
+            });
+        } catch (\Throwable $e) {
+            // Store settings are read while rendering every page (theme colors,
+            // default currency); fall back rather than fail the request.
+            return $default;
+        }
     }
 }
 
 if (! function_exists('activeCurrency')) {
-    function activeCurrency()
+    /**
+     * The active currency, never null.
+     *
+     * Views read $currency->symbol directly, so returning null on a fresh
+     * (unseeded) database or during a database outage would fatal every
+     * storefront page. The fallback is deliberately not cached, so the real
+     * row is picked up as soon as it exists.
+     */
+    function activeCurrency(): Currency
     {
-        return Cache::rememberForever('active_currency_'.session('currency', 'USD'), function () {
-            return Currency::where('code', session('currency', 'USD'))->first();
-        });
+        $code = session('currency', 'USD');
+
+        try {
+            $currency = Cache::rememberForever('active_currency_'.$code, function () use ($code) {
+                return Currency::where('code', $code)->first();
+            });
+        } catch (\Throwable $e) {
+            $currency = null;
+        }
+
+        if ($currency) {
+            return $currency;
+        }
+
+        Cache::forget('active_currency_'.$code);
+
+        $fallback = new Currency;
+        $fallback->name = 'US Dollar';
+        $fallback->code = 'USD';
+        $fallback->symbol = '$';
+        $fallback->exchange_rate = 1.0;
+
+        return $fallback;
     }
 }
 
 if (! function_exists('currency_symbol')) {
     function currency_symbol()
     {
-        $currency = activeCurrency();
-        return $currency ? $currency->symbol : '$';
+        return activeCurrency()->symbol ?: '$';
     }
 }
