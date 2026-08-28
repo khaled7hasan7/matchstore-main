@@ -140,7 +140,7 @@ Supabase يستضيف **قاعدة البيانات (PostgreSQL)** فقط — ت
 
 | الأولوية | العائق | الملف | الحل | الجهد |
 |---|---|---|---|---|
-| 🔴 | امتداد PHP غير مفعّل — `pdo_pgsql` معطّل في XAMPP | `C:\xampp\php\php.ini` سطرا 947 و949 | أزل `;` من `;extension=pdo_pgsql` و`;extension=pgsql` وأعد تشغيل Apache (الملفات موجودة في `ext/`) | 5 دقائق |
+| ✅ | امتداد PHP `pdo_pgsql` — **مُفعّل** (PHP 8.5.5، السطران 934 و936) | `C:\php\php.ini` | تم — `PDO::getAvailableDrivers()` يعرض `pgsql` | تم |
 | 🔴 | `SET FOREIGN_KEY_CHECKS` — أمر MySQL فقط | `IbnTaymiyyahBookstoreSeeder.php:42,61` | احذف السطرين (ترتيب الحذف صحيح أصلاً) | 5 دقائق |
 | 🔴 | `->change()` و`renameColumn()` تحتاجان `doctrine/dbal` وغير مثبتة | migrations `2025_12_31_185724` و`2026_01_05_135955` | `composer require doctrine/dbal` | 15 دقيقة |
 | 🔴 | نقل البيانات — ملفا الدمب بصيغة MariaDB لا يقبلهما PostgreSQL | `backup*.sql` | شغّل `php artisan migrate` على Supabase لبناء المخطط، ثم انقل **البيانات فقط** عبر pgloader أو CSV، ثم اضبط الـ sequences (انظر 5.4) | 4–8 ساعات |
@@ -193,6 +193,20 @@ SELECT setval(pg_get_serial_sequence('products','id'), COALESCE(MAX(id),1)) FROM
 **الخطوة 7 (اختياري لاحقاً) —** نقل صور المنتجات إلى Supabase Storage عبر واجهته المتوافقة مع S3 (`composer require league/flysystem-aws-s3-v3` + إعداد disk `s3` بمفاتيح Supabase Storage).
 
 > **ملاحظة عن Row Level Security:** ستظهر تنبيهات في لوحة Supabase بأن الجداول بلا RLS. هذا طبيعي — Laravel يتصل بدور `postgres` متجاوزاً RLS، والأمان في طبقة التطبيق. **لكن لا تفعّل** Supabase Auto APIs (PostgREST) على هذه الجداول للعموم.
+
+### 5.5 حالة التنفيذ — 2026-08-28 ✅
+
+| البند | الحالة |
+|---|---|
+| مشروع Supabase | ✅ `sdnkvokzbslziodmwhoa` — منطقة `eu-central-1` — PostgreSQL 17.6 |
+| `.env` | ✅ `DB_CONNECTION=pgsql` + Session Pooler (5432) + `DB_SSLMODE=require` |
+| امتداد `pdo_pgsql` | ✅ مُفعّل في `C:\php\php.ini` |
+| بناء المخطط | ✅ `php artisan migrate --force` — **65 migration نُفّذت، 0 معلّقة** (لم تحتج `doctrine/dbal`) |
+| البيانات | ⏳ القاعدة فارغة — بانتظار اختيار الخطوة 5 (seed جديد أو نقل من MariaDB) |
+| Supabase MCP | ✅ `.mcp.json` + Agent Skills (`.agents/skills`) — المصادقة عبر `claude /mcp` |
+| إصلاحات الكود (5.3) | ⏳ لم تُنفَّذ بعد: `ShopController` فرز السعر، `like` → `ilike`، `FOREIGN_KEY_CHECKS` في `IbnTaymiyyahBookstoreSeeder` |
+
+> **ملاحظة Windows:** روابط `.claude/skills/*` هي git symlinks؛ بدون Developer Mode تُستخرج كملفات نصية. الحل المحلي: `New-Item -ItemType Junction` من `.claude/skills/<name>` إلى `.agents/skills/<name>` (ثم `git update-index --skip-worktree` عليها).
 
 ---
 
