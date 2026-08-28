@@ -7,36 +7,32 @@ return [
     | View Storage Paths
     |--------------------------------------------------------------------------
     |
-    | Most templating systems load templates from disk. Here you may specify
-    | an array of paths that should be checked for your views. Of course
-    | the usual Laravel view path has already been registered for you.
+    | The active theme is searched first, so a theme may override any core
+    | view, with the shared views as the fallback.
     |
     */
 
-    /*'paths' => [
+    'paths' => [
+        resource_path('views/themes/'.env('APP_THEME', 'xylo')),
         resource_path('views'),
-    ],*/
+    ],
 
     /*
     |--------------------------------------------------------------------------
     | Compiled View Path
     |--------------------------------------------------------------------------
     |
-    | This option determines where all the compiled Blade templates will be
-    | stored for your application. Typically, this is within the storage
-    | directory. However, as usual, you are free to change this value.
+    | Where compiled Blade templates are written. This has to stay
+    | env-configurable: on a read-only host (serverless) the app points it at a
+    | writable directory such as /tmp/views. realpath() only normalises an
+    | existing directory and returns false when it is missing, so fall back to
+    | the plain path rather than letting false through.
     |
     */
 
-    /*'compiled' => env(
+    'compiled' => env(
         'VIEW_COMPILED_PATH',
-        realpath(storage_path('framework/views'))
-    ),*/
-
-    'paths' => [
-        resource_path('views/themes/'.env('APP_THEME', 'xylo')),
-        resource_path('views'),
-    ],
-    'compiled' => realpath(storage_path('framework/views')),
+        realpath(storage_path('framework/views')) ?: storage_path('framework/views')
+    ),
 
 ];

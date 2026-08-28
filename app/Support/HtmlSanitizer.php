@@ -26,12 +26,6 @@ class HtmlSanitizer
     protected static function purifier(): HTMLPurifier
     {
         if (static::$purifier === null) {
-            $cachePath = storage_path('app/purifier');
-
-            if (! is_dir($cachePath)) {
-                mkdir($cachePath, 0755, true);
-            }
-
             $config = HTMLPurifier_Config::createDefault();
             $config->set('HTML.Allowed', implode(',', [
                 'p', 'br', 'hr', 'b', 'strong', 'i', 'em', 'u', 's',
@@ -43,11 +37,36 @@ class HtmlSanitizer
             $config->set('CSS.AllowedProperties', 'color,text-align,font-weight,font-style,text-decoration');
             $config->set('URI.AllowedSchemes', ['http' => true, 'https' => true, 'mailto' => true]);
             $config->set('HTML.Nofollow', true);
-            $config->set('Cache.SerializerPath', $cachePath);
+            if ($cachePath = static::writableCachePath()) {
+                $config->set('Cache.SerializerPath', $cachePath);
+            } else {
+                // Nowhere writable (read-only serverless host): run without a
+                // definition cache rather than failing to sanitize at all.
+                $config->set('Cache.DefinitionImpl', null);
+            }
 
             static::$purifier = new HTMLPurifier($config);
         }
 
         return static::$purifier;
+    }
+
+    /**
+     * First writable directory for HTMLPurifier's definition cache, or null
+     * when the host allows no writes at all.
+     */
+    protected static function writableCachePath(): ?string
+    {
+        foreach ([storage_path('app/purifier'), sys_get_temp_dir().'/htmlpurifier'] as $path) {
+            if (! is_dir($path)) {
+                @mkdir($path, 0755, true);
+            }
+
+            if (is_dir($path) && is_writable($path)) {
+                return $path;
+            }
+        }
+
+        return null;
     }
 }
