@@ -170,14 +170,16 @@ DB_PASSWORD=<كلمة المرور>
 ```
 وفي `config/database.php` غيّر `'sslmode' => 'prefer'` إلى `'require'`.
 
-> ⚠️ **تحذيران مهمان:**
+> ⚠️ **ثلاثة تنبيهات مهمة:**
 > - استخدم منفذ **5432 (Session Mode)** لأوامر `migrate` والتطبيق. منفذ **6543 (Transaction Mode)** يكسر Prepared Statements في Laravel ما لم تفعّل `PDO::ATTR_EMULATE_PREPARES`.
 > - الاتصال المباشر `db.<ref>.supabase.co` يعمل عبر IPv6 فقط في الخطة المجانية — استخدم عنوان الـ Pooler أعلاه.
+> - **فعّل فرض SSL من جهة الخادم:** Dashboard ← Settings ← Database ← **Enforce SSL on incoming connections**. اكتُشف أثناء التحقق الفعلي (2026-08-28) أن الخادم يقبل افتراضياً اتصالات غير مشفرة — `DB_SSLMODE=require` يحمي عميلنا، لكن الفرض من الخادم يغلق الباب على أي عميل آخر مهمل.
 
 **الخطوة 3 — إصلاحات الكود: ✅ منجزة بالكامل ومدفوعة للمستودع** (حذف `FOREIGN_KEY_CHECKS`، تثبيت `doctrine/dbal`، إعادة كتابة استعلامات `ShopController`، macro `whereLike` المحمول، إصلاح migrations الجمع بين rename والإضافة).
 
 **الخطوة 4 — بناء المخطط والبيانات** (التسلسل الكامل المُختبر فعلياً على PostgreSQL 16):
 ```bash
+composer install          # يزامن vendor مع composer.lock (منها doctrine/dbal)
 php artisan migrate --force
 php artisan db:seed --force --class=LanguageSeeder
 php artisan db:seed --force --class=CurrencySeeder
