@@ -1,0 +1,8 @@
+vendor
+node_modules
+tests
+.git
+.agents
+.claude
+storage/logs
+storage/pail

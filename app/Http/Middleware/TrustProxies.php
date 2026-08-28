@@ -10,9 +10,13 @@ class TrustProxies extends Middleware
     /**
      * The trusted proxies for this application.
      *
+     * Vercel (and most managed hosts) terminate TLS at their proxy; trusting
+     * it lets Laravel see the real scheme/host so generated URLs use https
+     * and secure cookies work.
+     *
      * @var array<int, string>|string|null
      */
-    protected $proxies;
+    protected $proxies = '*';
 
     /**
      * The headers that should be used to detect proxies.
