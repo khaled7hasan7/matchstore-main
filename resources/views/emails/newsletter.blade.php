@@ -151,7 +151,7 @@
         <div class="email-header">
             <div class="logo-container">
                 @if($siteSettings && $siteSettings->logo)
-                    <img src="{{ asset('storage/' . $siteSettings->logo) }}" alt="{{ $siteSettings->site_name ?? config('app.name') }}" class="logo">
+                    <img src="{{ store_image($siteSettings->logo) }}" alt="{{ $siteSettings->site_name ?? config('app.name') }}" class="logo">
                 @endif
             </div>
             <div class="store-name">{{ $siteSettings->site_name ?? config('app.name') }}</div>
@@ -172,7 +172,7 @@
         <!-- Footer -->
         <div class="email-footer">
             @if($siteSettings && $siteSettings->logo)
-                <img src="{{ asset('storage/' . $siteSettings->logo) }}" alt="{{ $siteSettings->site_name ?? config('app.name') }}" class="footer-logo">
+                <img src="{{ store_image($siteSettings->logo) }}" alt="{{ $siteSettings->site_name ?? config('app.name') }}" class="footer-logo">
             @endif
             <div class="footer-store-name">{{ $siteSettings->site_name ?? config('app.name') }}</div>
             <p>&copy; {{ date('Y') }} {{ $siteSettings->site_name ?? config('app.name') }}. All rights reserved.</p>

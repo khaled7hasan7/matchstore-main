@@ -16,7 +16,7 @@
             {{-- Logo --}}
             <div class="auth-logo mb-4">
                 @if($siteSettings && $siteSettings->logo)
-                    <img src="{{ asset('storage/' . $siteSettings->logo) }}"
+                    <img src="{{ store_image($siteSettings->logo) }}"
                          alt="{{ $siteSettings->site_name ?? 'Logo' }}"
                          class="img-fluid"
                          style="max-width: 180px;">
@@ -141,7 +141,7 @@
     <div class="mobile-auth-header">
         <div class="mobile-auth-logo">
             @if($siteSettings && $siteSettings->logo)
-                <img src="{{ asset('storage/' . $siteSettings->logo) }}" alt="{{ $siteSettings->site_name ?? 'Logo' }}">
+                <img src="{{ store_image($siteSettings->logo) }}" alt="{{ $siteSettings->site_name ?? 'Logo' }}">
             @else
                 <img src="https://i.ibb.co/dHx2ZR3/velstore.png" alt="Logo">
             @endif

@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Unsubscribed - {{ $siteSettings->site_name ?? config('app.name') }}</title>
     @if($siteSettings && $siteSettings->favicon)
-        <link rel="icon" type="image/x-icon" href="{{ asset('storage/' . $siteSettings->favicon) }}">
-        <link rel="shortcut icon" type="image/x-icon" href="{{ asset('storage/' . $siteSettings->favicon) }}">
+        <link rel="icon" type="image/x-icon" href="{{ store_image($siteSettings->favicon) }}">
+        <link rel="shortcut icon" type="image/x-icon" href="{{ store_image($siteSettings->favicon) }}">
     @endif
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -199,7 +199,7 @@
         <div class="header">
             <div class="logo-container">
                 @if($siteSettings && $siteSettings->logo)
-                    <img src="{{ asset('storage/' . $siteSettings->logo) }}" alt="{{ $siteSettings->site_name ?? config('app.name') }}" class="logo">
+                    <img src="{{ store_image($siteSettings->logo) }}" alt="{{ $siteSettings->site_name ?? config('app.name') }}" class="logo">
                 @endif
             </div>
             <div class="store-name">{{ $siteSettings->site_name ?? config('app.name') }}</div>
@@ -239,7 +239,7 @@
         <!-- Footer -->
         <div class="footer">
             @if($siteSettings && $siteSettings->logo)
-                <img src="{{ asset('storage/' . $siteSettings->logo) }}" alt="{{ $siteSettings->site_name ?? config('app.name') }}" class="footer-logo">
+                <img src="{{ store_image($siteSettings->logo) }}" alt="{{ $siteSettings->site_name ?? config('app.name') }}" class="footer-logo">
             @endif
             <p class="footer-store-name">{{ $siteSettings->site_name ?? config('app.name') }}</p>
             <p>&copy; {{ date('Y') }} {{ $siteSettings->site_name ?? config('app.name') }}. All rights reserved.</p>

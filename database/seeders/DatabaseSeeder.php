@@ -11,7 +11,7 @@ class DatabaseSeeder extends Seeder
      *
      * Deliberately excluded: OrderSeeder, PaymentSeeder and RefundSeeder,
      * which invent transactions a real store must not start life with, and the
-     * generic demo catalogue, which the bookstore seeder replaces anyway.
+     * generic demo catalogue, which the store seeder replaces anyway.
      *
      * Every seeder called here is safe to run again.
      */
@@ -26,7 +26,7 @@ class DatabaseSeeder extends Seeder
             MenuSeeder::class,
             PageSeeder::class,
             SiteSettingsSeeder::class,
-            IbnTaymiyyahBookstoreSeeder::class,
+            FalakStoreSeeder::class,
         ]);
     }
 }

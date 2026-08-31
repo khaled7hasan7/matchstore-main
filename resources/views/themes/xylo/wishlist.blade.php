@@ -381,9 +381,7 @@
 
                         <div class="product-img position-relative">
                             @php
-                                $imageUrl = optional($product->thumbnail)->image_url ?? 'default.jpg';
-                                $isExternal = str_starts_with($imageUrl, 'http://') || str_starts_with($imageUrl, 'https://');
-                                $finalImageUrl = $isExternal ? $imageUrl : asset('storage/' . $imageUrl);
+                                $finalImageUrl = store_image(optional($product->thumbnail)->image_url ?? 'default.jpg');
                             @endphp
                             <img src="{{ $finalImageUrl }}"
                                  alt="{{ $product->translation->name }}" style="object-fit: contain; width: 100%; height: 250px;">
@@ -463,9 +461,7 @@
         <div class="mobile-wishlist-grid">
             @foreach ($products as $product)
                 @php
-                    $imageUrl = optional($product->thumbnail)->image_url ?? 'default.jpg';
-                    $isExternal = str_starts_with($imageUrl, 'http://') || str_starts_with($imageUrl, 'https://');
-                    $finalImageUrl = $isExternal ? $imageUrl : asset('storage/' . $imageUrl);
+                    $finalImageUrl = store_image(optional($product->thumbnail)->image_url ?? 'default.jpg');
                 @endphp
 
                 <div class="mobile-wishlist-card" data-product-id="{{ $product->id }}">

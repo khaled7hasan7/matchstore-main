@@ -4,9 +4,7 @@
             @php
                 $productImage = $product->images->first();
                 if ($productImage) {
-                    $imageUrl = $productImage->image_url;
-                    $isExternal = str_starts_with($imageUrl, 'http://') || str_starts_with($imageUrl, 'https://');
-                    $finalImageUrl = $isExternal ? $imageUrl : asset('storage/' . $imageUrl);
+                    $finalImageUrl = store_image($productImage->image_url);
                 } else {
                     $finalImageUrl = 'https://via.placeholder.com/400x400?text=No+Image';
                 }

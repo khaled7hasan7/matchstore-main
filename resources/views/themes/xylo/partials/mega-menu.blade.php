@@ -121,10 +121,7 @@
                                     <a href="{{ route('product.show', $product->slug) }}" class="product-card-mini">
                                         @if($product->images->first())
                                             @php
-                                                $imageUrl = $product->images->first()->image_url;
-                                                // Check if URL is external (starts with http/https)
-                                                $isExternal = str_starts_with($imageUrl, 'http://') || str_starts_with($imageUrl, 'https://');
-                                                $finalUrl = $isExternal ? $imageUrl : asset('storage/' . $imageUrl);
+                                                $finalUrl = store_image($product->images->first()->image_url);
                                             @endphp
                                             <img src="{{ $finalUrl }}"
                                                  alt="{{ $product->translation->name ?? 'Product' }}"
@@ -164,10 +161,7 @@
                                     <a href="{{ route('product.show', $product->slug) }}" class="product-card-mini">
                                         @if($product->images->first())
                                             @php
-                                                $imageUrl = $product->images->first()->image_url;
-                                                // Check if URL is external (starts with http/https)
-                                                $isExternal = str_starts_with($imageUrl, 'http://') || str_starts_with($imageUrl, 'https://');
-                                                $finalUrl = $isExternal ? $imageUrl : asset('storage/' . $imageUrl);
+                                                $finalUrl = store_image($product->images->first()->image_url);
                                             @endphp
                                             <img src="{{ $finalUrl }}"
                                                  alt="{{ $product->translation->name ?? 'Product' }}"
@@ -243,9 +237,7 @@
                                             <a href="{{ route('product.show', $product->slug) }}" class="product-card-mini">
                                                 @if($product->images->first())
                                                     @php
-                                                        $imageUrl = $product->images->first()->image_url;
-                                                        $isExternal = str_starts_with($imageUrl, 'http://') || str_starts_with($imageUrl, 'https://');
-                                                        $finalUrl = $isExternal ? $imageUrl : asset('storage/' . $imageUrl);
+                                                        $finalUrl = store_image($product->images->first()->image_url);
                                                     @endphp
                                                     <img src="{{ $finalUrl }}"
                                                          alt="{{ $product->translation->name ?? 'Product' }}"

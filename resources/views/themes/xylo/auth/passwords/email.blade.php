@@ -9,7 +9,7 @@
 
                     <div class="text-center mb-4">
                         @if($siteSettings && $siteSettings->logo)
-                            <img src="{{ asset('storage/' . $siteSettings->logo) }}"
+                            <img src="{{ store_image($siteSettings->logo) }}"
                                  alt="{{ $siteSettings->site_name ?? 'Logo' }}" class="img-fluid mb-3" style="max-width: 140px;">
                         @endif
                         <h3 class="fw-bold mb-2">{{ __('store.login.forgot_password') }}</h3>

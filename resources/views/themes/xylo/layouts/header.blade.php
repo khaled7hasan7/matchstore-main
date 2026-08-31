@@ -107,7 +107,7 @@
                 <div class="logo-section">
                     <a href="{{ route('xylo.home') }}" class="brand-logo">
                         @if($siteSettings && $siteSettings->logo)
-                            <img src="{{ asset('storage/' . $siteSettings->logo) }}"
+                            <img src="{{ store_image($siteSettings->logo) }}"
                                  alt="{{ $siteSettings->site_name ?? 'Logo' }}"
                                  class="logo-image">
                         @else

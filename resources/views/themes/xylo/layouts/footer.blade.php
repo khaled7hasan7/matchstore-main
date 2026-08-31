@@ -69,7 +69,7 @@
                 <div class="col-lg-4 col-md-6">
                     <div class="footer-brand">
                         @if($siteSettings && $siteSettings->logo)
-                            <img src="{{ asset('storage/' . $siteSettings->logo) }}"
+                            <img src="{{ store_image($siteSettings->logo) }}"
                                  alt="{{ $siteSettings->site_name ?? 'Logo' }}"
                                  class="footer-logo mb-3">
                         @else

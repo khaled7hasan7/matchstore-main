@@ -33,6 +33,7 @@
         },
         "files": [
             "app/Helpers/cms_translate.php",
+            "app/Helpers/images.php",
             "app/Helpers/currency.php",
             "app/Helpers/theme.php"
         ]

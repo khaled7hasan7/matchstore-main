@@ -1690,9 +1690,7 @@
                         @if($product->images->isNotEmpty())
                             @php
                                 $firstImage = $product->images->first();
-                                $imageUrl = $firstImage->image_url;
-                                $isExternal = str_starts_with($imageUrl, 'http://') || str_starts_with($imageUrl, 'https://');
-                                $finalImageUrl = $isExternal ? $imageUrl : asset('storage/' . $imageUrl);
+                                $finalImageUrl = store_image($firstImage->image_url);
                             @endphp
                             <img src="{{ $finalImageUrl }}"
                                  alt="{{ $product->translation->name }}"
@@ -1711,9 +1709,7 @@
                         <div class="thumbnail-gallery">
                             @foreach($product->images as $index => $image)
                                 @php
-                                    $imageUrl = $image->image_url;
-                                    $isExternal = str_starts_with($imageUrl, 'http://') || str_starts_with($imageUrl, 'https://');
-                                    $finalImageUrl = $isExternal ? $imageUrl : asset('storage/' . $imageUrl);
+                                    $finalImageUrl = store_image($image->image_url);
                                 @endphp
                                 <div class="thumbnail-item {{ $index === 0 ? 'active' : '' }}"
                                      onclick="changeMainImage('{{ $finalImageUrl }}', this)">
@@ -2057,9 +2053,7 @@
                 @if($product->images->isNotEmpty())
                     @foreach($product->images as $image)
                         @php
-                            $imageUrl = $image->image_url;
-                            $isExternal = str_starts_with($imageUrl, 'http://') || str_starts_with($imageUrl, 'https://');
-                            $finalImageUrl = $isExternal ? $imageUrl : asset('storage/' . $imageUrl);
+                            $finalImageUrl = store_image($image->image_url);
                         @endphp
                         <div class="mobile-gallery-slide">
                             <img src="{{ $finalImageUrl }}"

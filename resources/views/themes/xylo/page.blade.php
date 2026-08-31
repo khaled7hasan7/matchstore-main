@@ -24,9 +24,7 @@
         @if($page->image_url)
             <div class="page-featured-image mb-4">
                 @php
-                    $pageImageUrl = $page->image_url;
-                    $isPageExternal = str_starts_with($pageImageUrl, 'http://') || str_starts_with($pageImageUrl, 'https://');
-                    $finalPageUrl = $isPageExternal ? $pageImageUrl : asset('storage/' . $pageImageUrl);
+                    $finalPageUrl = store_image($page->image_url);
                 @endphp
                 <img src="{{ $finalPageUrl }}"
                      alt="{{ $translation->title }}"

@@ -632,9 +632,7 @@
                         {{-- Product Image --}}
                         <div class="product-image-wrapper">
                             @php
-                                $imageUrl = optional($product->thumbnail)->image_url ?? 'default-thumbnail.jpg';
-                                $isExternal = str_starts_with($imageUrl, 'http://') || str_starts_with($imageUrl, 'https://');
-                                $finalImageUrl = $isExternal ? $imageUrl : asset('storage/' . $imageUrl);
+                                $finalImageUrl = store_image(optional($product->thumbnail)->image_url ?? 'default-thumbnail.jpg');
                             @endphp
                             <img src="{{ $finalImageUrl }}"
                                  alt="{{ optional($product->translation)->name ?? 'Product' }}"
@@ -744,9 +742,7 @@
                             {{-- Product Image --}}
                             <div class="mobile-product-image">
                                 @php
-                                    $imageUrl = optional($product->thumbnail)->image_url ?? 'default-thumbnail.jpg';
-                                    $isExternal = str_starts_with($imageUrl, 'http://') || str_starts_with($imageUrl, 'https://');
-                                    $finalImageUrl = $isExternal ? $imageUrl : asset('storage/' . $imageUrl);
+                                    $finalImageUrl = store_image(optional($product->thumbnail)->image_url ?? 'default-thumbnail.jpg');
                                 @endphp
                                 <img src="{{ $finalImageUrl }}"
                                      alt="{{ optional($product->translation)->name ?? 'Product' }}"

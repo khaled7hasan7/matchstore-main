@@ -68,15 +68,9 @@
                         }
 
                         // Handle image URL
-                        if ($imageUrl) {
-                            if (\Illuminate\Support\Str::startsWith($imageUrl, ['http://', 'https://'])) {
-                                $finalImageUrl = $imageUrl;
-                            } else {
-                                $finalImageUrl = asset('storage/' . $imageUrl);
-                            }
-                        } else {
-                            $finalImageUrl = asset('images/default-product.png');
-                        }
+                        $finalImageUrl = $imageUrl
+                            ? store_image($imageUrl)
+                            : asset('images/default-product.png');
                     @endphp
                     <img src="{{ $finalImageUrl }}"
                          alt="{{ $variant->name ?? $product->translation->name }}"
@@ -268,13 +262,9 @@
                             $imageUrl = $product->thumbnail->image_url;
                         }
 
-                        if ($imageUrl) {
-                            $finalImageUrl = \Illuminate\Support\Str::startsWith($imageUrl, ['http://', 'https://'])
-                                ? $imageUrl
-                                : asset('storage/' . $imageUrl);
-                        } else {
-                            $finalImageUrl = asset('images/default-product.png');
-                        }
+                        $finalImageUrl = $imageUrl
+                            ? store_image($imageUrl)
+                            : asset('images/default-product.png');
 
                         // Get sizes and colors
                         $sizes = [];

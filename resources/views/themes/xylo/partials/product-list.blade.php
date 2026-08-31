@@ -218,9 +218,7 @@
     <div class="product-card-modern">
         <div class="product-image-wrapper">
             @php
-                $imageUrl = optional($product->thumbnail)->image_url ?? 'default.jpg';
-                $isExternal = str_starts_with($imageUrl, 'http://') || str_starts_with($imageUrl, 'https://');
-                $finalImageUrl = $isExternal ? $imageUrl : asset('storage/' . $imageUrl);
+                $finalImageUrl = store_image(optional($product->thumbnail)->image_url ?? 'default.jpg');
             @endphp
 
             @if(optional($product->primaryVariant)->converted_discount_price)

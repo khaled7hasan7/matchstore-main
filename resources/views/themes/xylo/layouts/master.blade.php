@@ -20,9 +20,9 @@
 
     {{-- Favicon from Site Settings --}}
     @if($siteSettings && $siteSettings->favicon)
-    <link rel="icon" type="image/x-icon" href="{{ asset('storage/' . $siteSettings->favicon) }}">
-    <link rel="shortcut icon" href="{{ asset('storage/' . $siteSettings->favicon) }}">
-    <link rel="apple-touch-icon" href="{{ asset('storage/' . $siteSettings->favicon) }}">
+    <link rel="icon" type="image/x-icon" href="{{ store_image($siteSettings->favicon) }}">
+    <link rel="shortcut icon" href="{{ store_image($siteSettings->favicon) }}">
+    <link rel="apple-touch-icon" href="{{ store_image($siteSettings->favicon) }}">
     @else
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     @endif

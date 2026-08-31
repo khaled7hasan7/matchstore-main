@@ -15,13 +15,7 @@
         <div class="promo-slider" id="promoSlider">
             @foreach ($banners as $index => $banner)
             @php
-                $bannerImageUrl = optional($banner->translation)->image_url ?? 'default.jpg';
-                // Remove 'public/' prefix if it exists (database inconsistency fix)
-                $bannerImageUrl = str_starts_with($bannerImageUrl, 'public/')
-                    ? substr($bannerImageUrl, 7)
-                    : $bannerImageUrl;
-                $isBannerExternal = str_starts_with($bannerImageUrl, 'http://') || str_starts_with($bannerImageUrl, 'https://');
-                $finalBannerUrl = $isBannerExternal ? $bannerImageUrl : asset('storage/' . $bannerImageUrl);
+                $finalBannerUrl = store_image(optional($banner->translation)->image_url ?? 'default.jpg');
             @endphp
             <div class="promo-slide {{ $index === 0 ? 'active' : '' }}">
                 <div class="promo-slide-bg">
@@ -138,9 +132,7 @@
                 <a href="{{ route('category.show', $category->slug) }}">
                     <div class="category-image">
                         @php
-                            $catImageUrl = optional($category->translation)->image_url ?? 'default.jpg';
-                            $isCatExternal = str_starts_with($catImageUrl, 'http://') || str_starts_with($catImageUrl, 'https://');
-                            $finalCatUrl = $isCatExternal ? $catImageUrl : asset('storage/' . $catImageUrl);
+                            $finalCatUrl = store_image(optional($category->translation)->image_url ?? 'default.jpg');
                         @endphp
                         <img src="{{ $finalCatUrl }}"
                              alt="{{ $category->translation->name ?? 'Category' }}">
@@ -281,12 +273,7 @@
     <div class="mobile-hero-slider" id="mobileHeroSlider">
         @foreach ($banners as $index => $banner)
         @php
-            $bannerImageUrl = optional($banner->translation)->image_url ?? 'default.jpg';
-            $bannerImageUrl = str_starts_with($bannerImageUrl, 'public/')
-                ? substr($bannerImageUrl, 7)
-                : $bannerImageUrl;
-            $isBannerExternal = str_starts_with($bannerImageUrl, 'http://') || str_starts_with($bannerImageUrl, 'https://');
-            $finalBannerUrl = $isBannerExternal ? $bannerImageUrl : asset('storage/' . $bannerImageUrl);
+            $finalBannerUrl = store_image(optional($banner->translation)->image_url ?? 'default.jpg');
         @endphp
         <div class="mobile-hero-slide {{ $index === 0 ? 'active' : '' }}">
             <div class="mobile-hero-image">
@@ -363,9 +350,7 @@
         @foreach($categories->take(4) as $category)
         <a href="{{ route('category.show', $category->slug) }}" class="mobile-category-card">
             @php
-                $catImageUrl = optional($category->translation)->image_url ?? 'default.jpg';
-                $isCatExternal = str_starts_with($catImageUrl, 'http://') || str_starts_with($catImageUrl, 'https://');
-                $finalCatUrl = $isCatExternal ? $catImageUrl : asset('storage/' . $catImageUrl);
+                $finalCatUrl = store_image(optional($category->translation)->image_url ?? 'default.jpg');
             @endphp
             <div class="mobile-category-img">
                 <img src="{{ $finalCatUrl }}" alt="{{ $category->translation->name ?? 'Category' }}">

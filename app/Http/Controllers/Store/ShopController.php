@@ -10,6 +10,7 @@ use App\Models\ProductReview;
 use App\Models\ProductTranslation;
 use App\Models\ProductVariant;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ShopController extends Controller
 {
@@ -132,23 +133,8 @@ class ShopController extends Controller
         $brands = Brand::with('translation')->withCount('products')->get();
         $categories = Category::with('translation')->withCount('products')->get();
 
-        // Get dynamic available colors from product variants
-        $availableColors = \DB::table('product_variant_attribute_values')
-            ->join('attribute_values', 'product_variant_attribute_values.attribute_value_id', '=', 'attribute_values.id')
-            ->join('attributes', 'attribute_values.attribute_id', '=', 'attributes.id')
-            ->where('attributes.name', 'Color')
-            ->distinct()
-            ->pluck('attribute_values.value')
-            ->toArray();
-
-        // Get dynamic available sizes from product variants
-        $availableSizes = \DB::table('product_variant_attribute_values')
-            ->join('attribute_values', 'product_variant_attribute_values.attribute_value_id', '=', 'attribute_values.id')
-            ->join('attributes', 'attribute_values.attribute_id', '=', 'attributes.id')
-            ->where('attributes.name', 'Size')
-            ->distinct()
-            ->pluck('attribute_values.value')
-            ->toArray();
+        $availableColors = $this->attributeOptions('Color', $locale);
+        $availableSizes = $this->attributeOptions('Size', $locale);
 
         if ($request->ajax()) {
             return view('themes.xylo.partials.product-list', compact('products'))->render();
@@ -163,5 +149,37 @@ class ShopController extends Controller
             'priceRange',
             'filters'
         ));
+    }
+
+    /**
+     * The values of one attribute that products actually carry, each with its
+     * label in the current language.
+     *
+     * @return array<int,array{value:string,label:string}>
+     */
+    private function attributeOptions(string $attribute, string $locale): array
+    {
+        return DB::table('product_variant_attribute_values')
+            ->join('attribute_values', 'product_variant_attribute_values.attribute_value_id', '=', 'attribute_values.id')
+            ->join('attributes', 'attribute_values.attribute_id', '=', 'attributes.id')
+            ->leftJoin('attribute_value_translations', function ($join) use ($locale) {
+                $join->on('attribute_value_translations.attribute_value_id', '=', 'attribute_values.id')
+                    ->where('attribute_value_translations.language_code', '=', $locale);
+            })
+            ->where('attributes.name', $attribute)
+            ->distinct()
+            ->orderBy('attribute_values.id')
+            ->get([
+                // PostgreSQL requires every ORDER BY column of a SELECT
+                // DISTINCT to be selected as well.
+                'attribute_values.id',
+                'attribute_values.value as value',
+                'attribute_value_translations.translated_value as label',
+            ])
+            ->map(fn ($row) => [
+                'value' => $row->value,
+                'label' => $row->label ?: $row->value,
+            ])
+            ->all();
     }
 }

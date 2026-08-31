@@ -837,32 +837,38 @@
                             </div>
 
                             {{-- Colors Filter --}}
+                            @if(count($availableColors))
                             <div class="filter-group">
                                 <h5 class="filter-title"><i class="fas fa-palette"></i>{{ __('store.shop.colors') }}</h5>
-                                @foreach(['red', 'black'] as $color)
+                                @foreach($availableColors as $color)
                                 <div class="form-check">
                                     <input class="form-check-input filter-input" type="checkbox" name="color[]"
-                                           value="{{ strtolower($color) }}" id="color-{{ $color }}">
-                                    <label class="form-check-label" for="color-{{ $color }}">
-                                        {{ __('store.shop.' . strtolower($color)) }}
+                                           value="{{ $color['value'] }}" id="color-{{ Str::slug($color['value']) }}"
+                                           {{ in_array($color['value'], (array) ($filters['color'] ?? [])) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="color-{{ Str::slug($color['value']) }}">
+                                        {{ $color['label'] }}
                                     </label>
                                 </div>
                                 @endforeach
                             </div>
+                            @endif
 
                             {{-- Size Filter --}}
+                            @if(count($availableSizes))
                             <div class="filter-group">
                                 <h5 class="filter-title"><i class="fas fa-ruler"></i>{{ __('store.shop.size') }}</h5>
-                                @foreach(['M' => 'M', 'L' => 'L'] as $key => $size)
+                                @foreach($availableSizes as $size)
                                 <div class="form-check">
                                     <input class="form-check-input filter-input" type="checkbox" name="size[]"
-                                           value="{{ $key }}" id="size-{{ $key }}">
-                                    <label class="form-check-label" for="size-{{ $key }}">
-                                        {{ __('store.shop.' . $key) }}
+                                           value="{{ $size['value'] }}" id="size-{{ Str::slug($size['value']) }}"
+                                           {{ in_array($size['value'], (array) ($filters['size'] ?? [])) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="size-{{ Str::slug($size['value']) }}">
+                                        {{ $size['label'] }}
                                     </label>
                                 </div>
                                 @endforeach
                             </div>
+                            @endif
                         </div>
                     </aside>
 

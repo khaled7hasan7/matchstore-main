@@ -280,7 +280,7 @@ class CheckoutTest extends TestCase
         Mail::fake();
 
         SiteSetting::create([
-            'site_name' => 'مكتبة ابن تيمية',
+            'site_name' => 'فلك ستور',
             'contact_email' => 'admin@store.local',
         ]);
 
