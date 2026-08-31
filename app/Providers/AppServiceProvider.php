@@ -18,7 +18,11 @@ use App\Repositories\Admin\SocialMediaLink\SocialMediaLinkRepository;
 use App\Repositories\Admin\SocialMediaLink\SocialMediaLinkRepositoryInterface;
 use App\Services\Admin\ImageService;
 use App\Services\Admin\MenuService;
+use App\Filesystem\SupabaseStorageAdapter;
 use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Filesystem\FilesystemAdapter as LaravelFilesystemAdapter;
+use Illuminate\Support\Facades\Storage;
+use League\Flysystem\Filesystem as Flysystem;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Cache;
@@ -58,10 +62,42 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
+     * Supabase Storage as a filesystem disk.
+     *
+     * Registered as a driver rather than reusing the s3 one so the AWS SDK
+     * stays out of the dependency list — see SupabaseStorageAdapter.
+     */
+    private function registerSupabaseDisk(): void
+    {
+        Storage::extend('supabase', function ($app, array $config) {
+            $adapter = new SupabaseStorageAdapter(
+                (string) ($config['bucket'] ?? ''),
+                (string) ($config['key'] ?? ''),
+                rtrim((string) ($config['endpoint'] ?? ''), '/'),
+            );
+
+            return new class(new Flysystem($adapter), $adapter, $config) extends LaravelFilesystemAdapter
+            {
+                public function __construct(Flysystem $driver, private SupabaseStorageAdapter $supabase, array $config)
+                {
+                    parent::__construct($driver, $supabase, $config);
+                }
+
+                public function url($path): string
+                {
+                    return $this->supabase->publicUrl($path);
+                }
+            };
+        });
+    }
+
+    /**
      * Bootstrap any application services.
      */
     public function boot(): void
     {
+        $this->registerSupabaseDisk();
+
         // Case-insensitive LIKE that is portable across drivers: PostgreSQL's
         // LIKE is case-sensitive (unlike MySQL/SQLite), so use ILIKE there.
         QueryBuilder::macro('whereLike', function (string $column, string $value) {

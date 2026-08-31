@@ -31,6 +31,12 @@ if (! function_exists('store_image')) {
             $path = substr($path, 7);
         }
 
-        return asset('storage/'.$path);
+        // An upload: ask the disk where it lives, since that is the local
+        // filesystem in development and Supabase Storage on the host.
+        try {
+            return \Illuminate\Support\Facades\Storage::disk('public')->url($path);
+        } catch (\Throwable $e) {
+            return asset('storage/'.$path);
+        }
     }
 }

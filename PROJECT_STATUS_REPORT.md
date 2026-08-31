@@ -408,7 +408,40 @@ php artisan falak:setup --check                        # فحص فقط، بلا 
 
 ---
 
-## 14. ملاحظات إضافية
+## 14. تخزين الصور على Supabase Storage (2026-08-31)
+
+**المشكلة الحقيقية ليست صور الكتالوج** — فهي مشحونة في `public/images/catalog` ويخدمها Vercel مجاناً وبسرعة، ونقلها لا يضيف شيئاً. المشكلة هي **الصور التي سترفعها لاحقاً من لوحة الأدمن**: نظام ملفات Vercel للقراءة فقط، فأي رفع كان سيفشل.
+
+**الحل:** قرص تخزين جديد يتحدث مع Supabase Storage عبر REST API مباشرة (`App\Filesystem\SupabaseStorageAdapter`) — **بلا أي تبعية جديدة**. الطريق المعتاد (`league/flysystem-aws-s3-v3` + `aws/aws-sdk-php`) كان يعني إضافة SDK ضخم وتحديث `composer.lock`؛ وواجهة Supabase البسيطة تغني عنه، وGuzzle موجود أصلاً.
+
+كل عمليات الرفع في التطبيق تمر بقرص `public` (`$image->store($folder, 'public')`). لذلك يكفي أن يتحوّل هذا القرص إلى Supabase عند ضبط المتغيّرات — **بلا تعديل سطر واحد** في أي خدمة رفع:
+
+```env
+SUPABASE_STORAGE_BUCKET=falak
+SUPABASE_STORAGE_KEY=<service_role-key>
+SUPABASE_STORAGE_ENDPOINT=https://<project-ref>.supabase.co/storage/v1
+```
+
+**أُصلح على الطريق:** `BannerService` كان يرفع في موضعين عبر `store('public/banner_images')` — وهذا يكتب على القرص **المحلي** متجاوزاً قرص `public`، فكان سيفشل على Vercel حتى بعد ضبط Supabase. و`store_image()` كان يبني رابط الرفع يدوياً بـ`asset('storage/…')`؛ صار يسأل القرص نفسه، فيعمل محلياً وعلى Supabase معاً.
+
+**الأمر:**
+```bash
+php artisan falak:storage                       # فحص الاتصال: كتابة وقراءة وحذف
+php artisan falak:storage --push                # رفع صور الكتالوج الـ72 إلى الحاوية
+php artisan falak:storage --push --rewrite-urls # وتحويل مسارات قاعدة البيانات إليها
+```
+
+**التحقق:** بُني خادم وهمي يحاكي واجهة Supabase Storage (رفع/تنزيل/حذف/سرد/نقل، وقراءة عامة بلا مصادقة كالحاوية العامة)، ثم:
+- رفع صورة منتج **عبر `Admin\ImageService` نفسها** ← وصلت الحاوية، الرابط العام صحيح، الحجم صحيح، والحذف نجح.
+- `--push` رفع الـ72 ملفاً، و`--rewrite-urls` حدّث **143 مساراً** في خمسة جداول.
+- صفحة المتجر بعدها تشير إلى روابط الحاوية وكلها تُحمّل بـ200.
+- 8 اختبارات في `SupabaseStorageTest` (رأس `x-upsert`، نوع المحتوى للـSVG، ترميز المسارات العربية وذات المسافات، شكل الرابط العام، الملف المفقود لا يرمي استثناءً).
+
+**الحزمة الآن 58 اختباراً / 517 تحققاً.**
+
+---
+
+## 15. ملاحظات إضافية
 
 - **جودة عامة جيدة:** لا يوجد `dd()` أو `TODO` منسية في الكود، والموديلات منظمة، والترجمة عبر جداول ترجمة نظيفة.
 - **ازدواجية كود:** `Vendor/ProductController` نسخة شبه مطابقة من `Admin/ProductController` (374 سطراً)، و`ImageService` مكرر — فرصة توحيد لاحقاً.

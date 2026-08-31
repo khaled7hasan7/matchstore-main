@@ -36,12 +36,34 @@ return [
             'throw' => false,
         ],
 
-        'public' => [
+        /*
+         * Every upload in the application is written to the "public" disk.
+         * The serverless host has a read-only filesystem, so when Supabase
+         * Storage is configured it takes that role over and uploads start
+         * working without a single call site changing.
+         */
+        'public' => env('SUPABASE_STORAGE_BUCKET') ? [
+            'driver' => 'supabase',
+            'bucket' => env('SUPABASE_STORAGE_BUCKET'),
+            'key' => env('SUPABASE_STORAGE_KEY'),
+            'endpoint' => env('SUPABASE_STORAGE_ENDPOINT'),
+            'throw' => false,
+        ] : [
             'driver' => 'local',
             'root' => storage_path('app/public'),
             'url' => env('APP_URL').'/storage',
             'visibility' => 'public',
             'throw' => false,
+        ],
+
+        // Always reachable by name, so a command can push files to Supabase
+        // even on a machine whose uploads still go to the local disk.
+        'supabase' => [
+            'driver' => 'supabase',
+            'bucket' => env('SUPABASE_STORAGE_BUCKET'),
+            'key' => env('SUPABASE_STORAGE_KEY'),
+            'endpoint' => env('SUPABASE_STORAGE_ENDPOINT'),
+            'throw' => true,
         ],
 
         's3' => [

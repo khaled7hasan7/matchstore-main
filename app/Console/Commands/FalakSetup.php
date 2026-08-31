@@ -92,6 +92,9 @@ class FalakSetup extends Command
         }
 
         $rows[] = ['اسم المتجر', DB::table('site_settings')->value('site_name') ?: '—'];
+        $rows[] = ['قرص الرفع', config('filesystems.disks.public.driver') === 'supabase'
+            ? 'Supabase Storage'
+            : 'محلي — الرفع من لوحة الأدمن لن ينجح على Vercel'];
 
         $this->newLine();
         $this->line('  <options=bold>الحالة الآن</>');
