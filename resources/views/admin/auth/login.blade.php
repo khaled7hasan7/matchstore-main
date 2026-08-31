@@ -425,8 +425,12 @@ body {
     <div class="login-branding">
         <div class="branding-content">
             <div class="logo-section">
-                <img src="{{ asset('storage/brands/logo-ready.png') }}" alt="MatchStore Logo" class="brand-logo">
-                <h1 class="brand-name">{{ cms_translate('auth.velstore') }}</h1>
+                @if($siteSettings && $siteSettings->logo)
+                    <img src="{{ store_image($siteSettings->logo) }}"
+                         alt="{{ $siteSettings->site_name ?? cms_translate('auth.velstore') }}"
+                         class="brand-logo">
+                @endif
+                <h1 class="brand-name">{{ $siteSettings->site_name ?? cms_translate('auth.velstore') }}</h1>
             </div>
             <div class="welcome-text">
                 <h2>{{ __('cms.auth.welcome_back') }}</h2>

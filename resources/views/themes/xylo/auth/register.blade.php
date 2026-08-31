@@ -21,7 +21,7 @@
                          class="img-fluid"
                          style="max-width: 180px;">
                 @else
-                    <img src="https://i.ibb.co/dHx2ZR3/velstore.png"
+                    <img src="{{ asset('/images/catalog/falak-logo.svg') }}"
                          alt="Logo"
                          class="img-fluid"
                          style="max-width: 180px;">
@@ -175,7 +175,7 @@
             @if($siteSettings && $siteSettings->logo)
                 <img src="{{ store_image($siteSettings->logo) }}" alt="{{ $siteSettings->site_name ?? 'Logo' }}">
             @else
-                <img src="https://i.ibb.co/dHx2ZR3/velstore.png" alt="Logo">
+                <img src="{{ asset('/images/catalog/falak-logo.svg') }}" alt="Logo">
             @endif
         </div>
         <h1>{{ __('store.register.join_us') }}</h1>
