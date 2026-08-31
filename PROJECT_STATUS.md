@@ -202,9 +202,12 @@ SELECT setval(pg_get_serial_sequence('products','id'), COALESCE(MAX(id),1)) FROM
 | `.env` | ✅ `DB_CONNECTION=pgsql` + Session Pooler (5432) + `DB_SSLMODE=require` |
 | امتداد `pdo_pgsql` | ✅ مُفعّل في `C:\php\php.ini` |
 | بناء المخطط | ✅ `php artisan migrate --force` — **65 migration نُفّذت، 0 معلّقة** (لم تحتج `doctrine/dbal`) |
-| البيانات | ⏳ القاعدة فارغة — بانتظار اختيار الخطوة 5 (seed جديد أو نقل من MariaDB) |
+| البيانات | ✅ مُعبّأة: لغات (ar/en)، عملات (USD/JOD/NIS)، إعدادات الموقع، القائمة، الصفحات (3×2 لغة)، 3 مناطق شحن + 27 محافظة، بوابات الدفع (PayPal/Stripe **معطّلتان** لأن مفاتيحهما placeholders — الدفع عند الاستلام فقط)، **مكتبة ابن تيمية**: 8 أقسام، 5 ناشرين، 22 كتاباً، مستخدم أدمن `admin@example.com` (دور admin) |
 | Supabase MCP | ✅ `.mcp.json` + Agent Skills (`.agents/skills`) — المصادقة عبر `claude /mcp` |
-| إصلاحات الكود (5.3) | ⏳ لم تُنفَّذ بعد: `ShopController` فرز السعر، `like` → `ilike`، `FOREIGN_KEY_CHECKS` في `IbnTaymiyyahBookstoreSeeder` |
+| إصلاحات الكود (5.3) | ✅ كانت منفَّذة سابقاً (`ShopController` subquery، `ilike` عبر ماكرو، حذف `FOREIGN_KEY_CHECKS`، `lockForUpdate`). متبقٍّ اختياري: عمود `"SKU"` الحساس لحالة الأحرف، وأعمدة `json` → `jsonb` |
+| أداء الصفحات | ✅ أُصلح N+1 حرج: `StoreMenuComposer`/`AdminLanguageComposer` كانا يستعلمان لكل partial (186 استعلاماً للرئيسية → **21**، المتجر 129 → **23**) عبر singletons تحفظ النتيجة لكل طلب + eager loading لـ `images`/`thumbnail`/`primaryVariant`. محلياً الصفحات 8–17 ث بسبب كمون ~500ms/استعلام إلى eu-central-1؛ على خادم في نفس المنطقة تصبح أجزاء الثانية |
+| `composer install` | ⚠️ حزم `nette/*` المقفولة تشترط PHP ≤ 8.4؛ محلياً (PHP 8.5.5) استخدم `composer install --ignore-platform-req=php`. للإنتاج استخدم PHP 8.2–8.4 |
+| TLS | ⚠️ Supabase لا يفرض SSL من جهته (اتصال `sslmode=disable` يُقبل) — العميل محمي بـ `require`؛ يُنصح بتفعيل **Enforce SSL** من Dashboard → Settings → Database |
 
 > **ملاحظة Windows:** روابط `.claude/skills/*` هي git symlinks؛ بدون Developer Mode تُستخرج كملفات نصية. الحل المحلي: `New-Item -ItemType Junction` من `.claude/skills/<name>` إلى `.agents/skills/<name>` (ثم `git update-index --skip-worktree` عليها).
 

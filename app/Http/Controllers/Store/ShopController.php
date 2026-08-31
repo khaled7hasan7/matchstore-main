@@ -42,7 +42,7 @@ class ShopController extends Controller
             $filters['price_max'] = ceil($priceRange->max_price ?? 1000);
         }
 
-        $query = Product::with(['translation', 'variants.attributeValues', 'images'])
+        $query = Product::with(['translation', 'thumbnail', 'primaryVariant', 'variants.attributeValues', 'images'])
             ->withCount('reviews')
             ->withAvg('reviews', 'rating')
             ->when(! empty($filters['category']), function ($query) use ($filters) {

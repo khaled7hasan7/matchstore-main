@@ -14,7 +14,10 @@ class ViewComposerServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Singletons so each composer's memoised query result is shared across
+        // every view rendered in the same request (layout + partials + components).
+        $this->app->singleton(StoreMenuComposer::class);
+        $this->app->singleton(AdminLanguageComposer::class);
     }
 
     /**
