@@ -46,6 +46,7 @@ class Handler extends ExceptionHandler
             $notice = require base_path('bootstrap/setup-notice.php');
             $driver = (string) config('database.default');
             $reason = $this->connectionFailureReason($e);
+            $inventory = $this->environmentInventory();
 
             return response($notice(
                 'تعذّر الاتصال بقاعدة البيانات',
@@ -60,6 +61,7 @@ class Handler extends ExceptionHandler
                 .'<code>DB_DATABASE</code>, <code>DB_USERNAME</code> and <code>DB_PASSWORD</code>. '
                 .'Set them for Production, then redeploy.',
                 'المحرّك المستخدم حالياً: <code>'.e($driver).'</code> — التشخيص: '.$reason
+                .'<br><br>المتغيّرات التي وصلت فعلاً إلى بيئة التشغيل:<br>'.$inventory
             ), 503);
         });
     }
@@ -138,5 +140,27 @@ class Handler extends ExceptionHandler
         }
 
         return (string) $e->getCode();
+    }
+
+    /**
+     * Which connection variables actually reached the runtime. Names and
+     * presence only — values are never rendered.
+     */
+    protected function environmentInventory(): string
+    {
+        $names = [
+            'DB_CONNECTION', 'DB_HOST', 'DB_PORT', 'DB_DATABASE',
+            'DB_USERNAME', 'DB_PASSWORD', 'DB_SSLMODE', 'DATABASE_URL',
+        ];
+
+        $parts = [];
+
+        foreach ($names as $name) {
+            $value = getenv($name);
+            $isSet = $value !== false && trim((string) $value) !== '';
+            $parts[] = ($isSet ? '✅' : '❌').' <code>'.$name.'</code>';
+        }
+
+        return implode(' &nbsp; ', $parts);
     }
 }
