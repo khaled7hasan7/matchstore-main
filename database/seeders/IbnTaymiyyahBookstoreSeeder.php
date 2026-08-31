@@ -51,21 +51,40 @@ class IbnTaymiyyahBookstoreSeeder extends Seeder
 
         $vendorId = $vendor->id;
 
-        $this->clearStoreContent();
+        // The catalogue is only built once. Re-seeding a live store must not
+        // delete books customers have reviewed, wishlisted or ordered.
+        $catalogueExists = DB::table('products')->where('shop_id', $shopId)->exists();
+
         $this->updateSiteSettings();
+
+        if (! $catalogueExists) {
+            $this->clearStoreContent();
+        }
 
         $categories = $this->seedCategories();
         $publishers = $this->seedPublishers();
-        $this->seedBooks($shopId, $vendorId, $categories, $publishers);
+
+        if ($catalogueExists) {
+            $this->command->info('مكتبة ابن تيمية: الكتب موجودة مسبقاً، لم يُحذف أو يُضف شيء.');
+        } else {
+            $this->seedBooks($shopId, $vendorId, $categories, $publishers);
+            $this->command->info('مكتبة ابن تيمية: تم تجهيز البيانات بنجاح.');
+        }
 
         // Reset cached site settings so the new name/language/currency take effect.
         \Illuminate\Support\Facades\Cache::forget('site_settings');
-
-        $this->command->info('مكتبة ابن تيمية: تم تجهيز البيانات بنجاح.');
     }
 
     private function clearStoreContent(): void
     {
+        // Sold products are referenced by order history; deleting them would
+        // either break that history or be refused outright by the database.
+        if (DB::getSchemaBuilder()->hasTable('order_items') && DB::table('order_items')->exists()) {
+            $this->command->warn('توجد طلبات سابقة — لن يُحذف الكتالوج القديم، ستُضاف الكتب فوقه.');
+
+            return;
+        }
+
         // Children are deleted before parents, so no FK toggling is needed —
         // SET FOREIGN_KEY_CHECKS is MySQL-only and breaks on PostgreSQL.
         foreach ([

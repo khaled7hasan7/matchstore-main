@@ -8,24 +8,25 @@ use Illuminate\Support\Facades\DB;
 class SiteSettingsSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
-     *
-     * @return void
+     * Baseline site settings. Only written when none exist, so re-seeding
+     * never overwrites what the store owner has configured.
      */
-    public function run()
+    public function run(): void
     {
+        if (DB::table('site_settings')->exists()) {
+            return;
+        }
+
         DB::table('site_settings')->insert([
-            'site_name' => 'My Awesome Laravel Site',
-            'tagline' => 'Building the future of web development',
-            'meta_title' => 'My Awesome Laravel Site - Home',
-            'meta_description' => 'Welcome to My Awesome Laravel Site, the place for all your web development needs.',
-            'meta_keywords' => 'laravel, web development, awesome site',
-            'logo' => 'path_to_logo.png',
-            'favicon' => 'favicon.ico',
-            'contact_email' => 'contact@myawesomelarsite.com',
-            'contact_phone' => '+1 234 567 890',
-            'address' => '123 Laravel St, Web City, Webland',
-            'footer_text' => '© 2025 My Awesome Laravel Site. All rights reserved.',
+            'site_name' => 'MatchStore',
+            'tagline' => 'متجر إلكتروني',
+            'meta_title' => 'MatchStore',
+            'meta_description' => 'متجر إلكتروني',
+            'meta_keywords' => null,
+            'contact_email' => null,
+            'contact_phone' => null,
+            'address' => null,
+            'footer_text' => null,
             'created_at' => now(),
             'updated_at' => now(),
         ]);

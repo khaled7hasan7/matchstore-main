@@ -181,19 +181,29 @@ DB_PASSWORD=<كلمة المرور>
 ```bash
 composer install          # يزامن vendor مع composer.lock (منها doctrine/dbal)
 php artisan migrate --force
-php artisan db:seed --force --class=LanguageSeeder
-php artisan db:seed --force --class=CurrencySeeder
-php artisan db:seed --force --class=ShippingRegionSeeder
-php artisan db:seed --force --class=PaymentGatewaySeeder
-php artisan db:seed --force --class=PaymentGatewayConfigSeeder
-php artisan db:seed --force --class=MenuSeeder
-php artisan db:seed --force --class=PageSeeder
-php artisan db:seed --force --class=SiteSettingsSeeder
-php artisan db:seed --force --class=IbnTaymiyyahBookstoreSeeder
+php artisan db:seed --force
 ```
-ثم أنشئ حساب الأدمن: `php artisan install:matchstore` (يولّد كلمة مرور عشوائية ويعرضها مرة واحدة)، أو أنشئه يدوياً.
+`db:seed` وحده يكفي: `DatabaseSeeder` يستدعي السيدرز التسعة بالترتيب الصحيح (اللغات ← العملات ← مناطق الشحن ← بوابات الدفع وإعداداتها ← القوائم ← الصفحات ← إعدادات الموقع ← سيدر المكتبة).
 
-> السيدرز الآن idempotent — إعادة تشغيلها آمنة. **الخيار ب (نقل فعلي من MariaDB)** يلزم فقط إن كانت لديك طلبات/عملاء حقيقيون: pgloader أو CSV عبر `\copy`، ثم إعادة ضبط العدّادات: `SELECT setval(pg_get_serial_sequence('products','id'), COALESCE(MAX(id),1)) FROM products;` لكل جدول.
+ثم أنشئ حساب الأدمن: `php artisan admin:create "بريدك@example.com" --name="اسمك"` (يولّد كلمة مرور عشوائية ويعرضها مرة واحدة).
+
+**ما تزرعه هذه الأوامر** (أرقام مُتحقَّقة على PostgreSQL 16 فعلي):
+
+| الجدول | العدد | المحتوى |
+|---|---|---|
+| `products` (+ variants) | 22 | كتب المكتبة، لكلٍّ متغيّر واحد بسعر ومخزون |
+| `product_translations` | 44 | عربي + إنجليزي لكل كتاب |
+| `product_images` | 44 | صورة مصغّرة + صورة عرض لكل كتاب |
+| `categories` | 8 | العقيدة، الفقه، التفسير، الحديث، الزهد، المصاحف، السيرة، اللغة |
+| `brands` | 5 | دور النشر |
+| `shipping_regions` | 27 | محافظات الأردن + مناطق فلسطين |
+| `payment_gateways` | 3 | الدفع عند الاستلام **مفعّل**، PayPal وStripe **معطّلان** (بياناتهما وهمية) |
+| `languages` / `currencies` | 2 / 3 | ar + en / USD, JOD, NIS |
+| `orders`, `payments`, `customers` | **0** | لا تُزرع أي مبيعات وهمية |
+
+> **إعادة التشغيل آمنة.** كل السيدرز idempotent، وسيدر المكتبة يتخطّى الكتالوج إن وُجد بدل حذفه — فلا تضيع مراجعات العملاء ولا قوائم أمنياتهم ولا سجل الطلبات. مُثبَت باختبارَي `DatabaseSeedingTest`.
+>
+> **الخيار ب (نقل فعلي من MariaDB)** يلزم فقط إن كانت لديك طلبات/عملاء حقيقيون: pgloader أو CSV عبر `\copy`، ثم إعادة ضبط العدّادات: `SELECT setval(pg_get_serial_sequence('products','id'), COALESCE(MAX(id),1)) FROM products;` لكل جدول.
 
 **الخطوة 5 — الاختبار:** الحزمة الآلية تغطي الأساس وقد **نجحت كاملة على PostgreSQL** (15 اختباراً: checkout كاملاً، الفرز والفلاتر والبحث). شغّلها بنفسك على قاعدة Supabase فارغة إن أردت:
 ```bash
@@ -323,7 +333,25 @@ MAIL_FROM_ADDRESS="orders@yourdomain.com"
 
 ---
 
-## 11. ملاحظات إضافية
+## 11. سجل إصلاحات تعبئة البيانات — السيدرز (2026-08-31)
+
+عند تجهيز أمر تعبئة القاعدة الحيّة تبيّن أن `DatabaseSeeder` نفسه كان غير صالح لمتجر حقيقي:
+
+| المشكلة | الأثر | الإصلاح |
+|---|---|---|
+| يستدعي `OrderSeeder` و`PaymentSeeder` و`RefundSeeder` | يبدأ المتجر بطلبات ومدفوعات واستردادات **وهمية** تظهر في لوحة الأدمن وفي تقارير المبيعات | حُذفت الثلاثة من السلسلة |
+| يُغفل العملات ومناطق الشحن والقوائم والصفحات وإعدادات الموقع وسيدر المكتبة | `db:seed` يترك المتجر بلا كتب ولا شحن ولا قوائم — تعبئة ناقصة صامتة | السلسلة الآن تسعة سيدرز بالترتيب الصحيح |
+| `PaymentGatewaySeeder` كان INSERT فقط، ويفعّل PayPal وStripe ببيانات وهمية | تكرار البوابات عند إعادة التشغيل، وعرض وسائل دفع لا تُكمل الشراء على العميل | أصبح idempotent بمفتاح `code`؛ الدفع عند الاستلام فقط هو المفعّل |
+| `SiteSettingsSeeder` كان INSERT فقط | صف إعدادات مكرر يطمس ما ضبطه صاحب المتجر | يكتب فقط حين يكون الجدول فارغاً |
+| `IbnTaymiyyahBookstoreSeeder` يحذف الكتالوج كاملاً في كل تشغيل | **إعادة تشغيل `db:seed` على متجر حيّ كانت تمسح مراجعات العملاء وقوائم أمنياتهم**، أو تفشل بخطأ مفتاح أجنبي إن وُجدت طلبات | يتخطّى البناء إذا كانت الكتب موجودة، ويرفض الحذف إذا وُجدت طلبات سابقة |
+
+**التحقق:** على PostgreSQL 16 فعلي — `migrate` ثم `db:seed` مرتين متتاليتين: كل الأعداد متطابقة بعد التشغيل الثاني (22 كتاباً، 44 ترجمة، 44 صورة، 8 تصنيفات، 5 دور نشر، 27 منطقة شحن، 3 بوابات) و`orders`/`payments`/`customers` = 0. ثم فحص حيّ للواجهة على القاعدة المزروعة: الرئيسية والمتجر وفرز السعر وصفحة الكتاب كلها 200 وتعرض عناوين الكتب واسم المكتبة.
+
+**الاختبارات:** `DatabaseSeedingTest` بخمسة اختبارات (اكتمال الكتالوج، بوابة الدفع المفعّلة وحدها، خلوّ سجل المبيعات، ثبات الأعداد بعد تشغيل ثانٍ، بقاء قائمة أمنيات العميل بعد إعادة الزرع) — **الحزمة الكاملة الآن 43 اختباراً / 147 تحققاً**.
+
+---
+
+## 12. ملاحظات إضافية
 
 - **جودة عامة جيدة:** لا يوجد `dd()` أو `TODO` منسية في الكود، والموديلات منظمة، والترجمة عبر جداول ترجمة نظيفة.
 - **ازدواجية كود:** `Vendor/ProductController` نسخة شبه مطابقة من `Admin/ProductController` (374 سطراً)، و`ImageService` مكرر — فرصة توحيد لاحقاً.

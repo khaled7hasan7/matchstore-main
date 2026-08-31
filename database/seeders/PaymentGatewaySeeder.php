@@ -7,78 +7,38 @@ use Illuminate\Support\Facades\DB;
 
 class PaymentGatewaySeeder extends Seeder
 {
+    /**
+     * The gateways themselves. Their credentials are seeded separately by
+     * PaymentGatewayConfigSeeder, so re-running this never duplicates either.
+     */
     public function run(): void
     {
-        // ---- PayPal ----
-        $paypalId = DB::table('payment_gateways')->insertGetId([
-            'name' => 'PayPal',
-            'code' => 'paypal',
-            'description' => 'PayPal payment gateway',
-            'is_active' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        $gateways = [
+            ['code' => 'cod', 'name' => 'Cash on Delivery', 'description' => 'Pay with cash when your order is delivered', 'is_active' => true],
+            ['code' => 'paypal', 'name' => 'PayPal', 'description' => 'PayPal payment gateway', 'is_active' => false],
+            ['code' => 'stripe', 'name' => 'Stripe', 'description' => 'Stripe payment gateway', 'is_active' => false],
+        ];
 
-        DB::table('payment_gateway_configs')->insert([
-            [
-                'gateway_id' => $paypalId,
-                'key_name' => 'client_id',
-                'key_value' => 'your-paypal-client-id',
-                'is_encrypted' => true,
-                'environment' => 'sandbox',
+        foreach ($gateways as $gateway) {
+            $exists = DB::table('payment_gateways')->where('code', $gateway['code'])->exists();
+
+            if ($exists) {
+                // Keep whatever the store owner has switched on since install.
+                DB::table('payment_gateways')
+                    ->where('code', $gateway['code'])
+                    ->update([
+                        'name' => $gateway['name'],
+                        'description' => $gateway['description'],
+                        'updated_at' => now(),
+                    ]);
+
+                continue;
+            }
+
+            DB::table('payment_gateways')->insert($gateway + [
                 'created_at' => now(),
                 'updated_at' => now(),
-            ],
-            [
-                'gateway_id' => $paypalId,
-                'key_name' => 'client_secret',
-                'key_value' => 'your-paypal-client-secret',
-                'is_encrypted' => true,
-                'environment' => 'sandbox',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-        ]);
-
-        // ---- Stripe ----
-        $stripeId = DB::table('payment_gateways')->insertGetId([
-            'name' => 'Stripe',
-            'code' => 'stripe',
-            'description' => 'Stripe payment gateway',
-            'is_active' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        DB::table('payment_gateway_configs')->insert([
-            [
-                'gateway_id' => $stripeId,
-                'key_name' => 'public_key',
-                'key_value' => 'your-stripe-public-key',
-                'is_encrypted' => false,
-                'environment' => 'sandbox',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'gateway_id' => $stripeId,
-                'key_name' => 'secret_key',
-                'key_value' => 'your-stripe-secret-key',
-                'is_encrypted' => true,
-                'environment' => 'sandbox',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-        ]);
-
-        // ---- Cash on Delivery ----
-        DB::table('payment_gateways')->insert([
-            'name' => 'Cash on Delivery',
-            'code' => 'cod',
-            'description' => 'Pay with cash when your order is delivered',
-            'is_active' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+            ]);
+        }
     }
 }
