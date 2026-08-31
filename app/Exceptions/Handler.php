@@ -44,6 +44,8 @@ class Handler extends ExceptionHandler
             }
 
             $notice = require base_path('bootstrap/setup-notice.php');
+            $driver = (string) config('database.default');
+            $reason = $this->connectionFailureReason($e);
 
             return response($notice(
                 'تعذّر الاتصال بقاعدة البيانات',
@@ -56,7 +58,8 @@ class Handler extends ExceptionHandler
                 '<strong>Database unreachable.</strong> Check <code>DB_CONNECTION</code> (it falls back to '
                 .'MySQL on localhost when unset), plus <code>DB_HOST</code>, <code>DB_PORT</code>, '
                 .'<code>DB_DATABASE</code>, <code>DB_USERNAME</code> and <code>DB_PASSWORD</code>. '
-                .'Set them for Production, then redeploy.'
+                .'Set them for Production, then redeploy.',
+                'المحرّك المستخدم حالياً: <code>'.e($driver).'</code> — التشخيص: '.$reason
             ), 503);
         });
     }
@@ -71,7 +74,7 @@ class Handler extends ExceptionHandler
             return false;
         }
 
-        $sqlState = (string) $e->getCode();
+        $sqlState = $this->sqlState($e);
 
         // Class 08: connection exceptions. 28xxx: authentication rejected.
         // 3D000: the named database does not exist.
@@ -82,8 +85,58 @@ class Handler extends ExceptionHandler
         // MySQL reports these as HY000 with the driver code in the message.
         return (bool) preg_match(
             '/Connection refused|could not connect|could not translate host name|Connection timed out|'
-            .'No such file or directory|server closed the connection|\b(2002|2003|2005|2006)\b/i',
+            .'No such file or directory|server closed the connection|could not find driver|'
+            .'\b(2002|2003|2005|2006)\b/i',
             $e->getMessage()
         );
+    }
+
+    /**
+     * A human-readable category for the failure. Deliberately derived from the
+     * driver's own signals so it never echoes a host, user or password back to
+     * the visitor.
+     */
+    protected function connectionFailureReason(Throwable $e): string
+    {
+        $sqlState = $this->sqlState($e);
+        $message = $e->getMessage();
+
+        $matches = static fn (string $needle): bool => stripos($message, $needle) !== false;
+
+        if ($matches('could not find driver')) {
+            return 'امتداد قاعدة البيانات غير متوفر في بيئة التشغيل.';
+        }
+
+        if (str_starts_with($sqlState, '28') || $matches('password authentication failed') || $matches('Access denied')) {
+            return 'رُفضت بيانات الدخول — راجع <code>DB_USERNAME</code> و<code>DB_PASSWORD</code>.';
+        }
+
+        if ($sqlState === '3D000' || $matches('does not exist')) {
+            return 'قاعدة البيانات المذكورة غير موجودة — راجع <code>DB_DATABASE</code>.';
+        }
+
+        if ($matches('could not translate host name') || $matches('Name or service not known') || $matches('getaddrinfo')) {
+            return 'تعذّر العثور على الخادم — راجع <code>DB_HOST</code>.';
+        }
+
+        if ($matches('timed out') || $matches('timeout')) {
+            return 'انتهت مهلة الاتصال — تحقق من <code>DB_HOST</code> و<code>DB_PORT</code> (استخدم Session Pooler على 5432).';
+        }
+
+        return 'رُفض الاتصال بالخادم — راجع <code>DB_HOST</code> و<code>DB_PORT</code>.';
+    }
+
+    /**
+     * The SQLSTATE for a database error. PDO's pgsql driver puts its own
+     * numeric code in getCode() and only spells the SQLSTATE out in the
+     * message, so read the message first.
+     */
+    protected function sqlState(Throwable $e): string
+    {
+        if (preg_match('/SQLSTATE\[([0-9A-Za-z]{5})\]/', $e->getMessage(), $matches) === 1) {
+            return $matches[1];
+        }
+
+        return (string) $e->getCode();
     }
 }
