@@ -20,6 +20,11 @@ $serverlessDefaults = [
     'LOG_CHANNEL' => 'stderr',
 ];
 
+// Non-secret connection coordinates for this deployment. Kept in their own
+// file so they read as configuration rather than entry-point code, and so the
+// secret (DB_PASSWORD) stays out of the repository.
+$serverlessDefaults += require __DIR__.'/../bootstrap/deployment-env.php';
+
 foreach ($serverlessDefaults as $key => $value) {
     $current = getenv($key);
 

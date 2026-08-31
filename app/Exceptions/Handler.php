@@ -44,24 +44,20 @@ class Handler extends ExceptionHandler
             }
 
             $notice = require base_path('bootstrap/setup-notice.php');
-            $driver = (string) config('database.default');
-            $reason = $this->connectionFailureReason($e);
-            $inventory = $this->environmentInventory();
 
             return response($notice(
                 'تعذّر الاتصال بقاعدة البيانات',
-                'التطبيق يعمل، لكنه لا يستطيع الوصول إلى قاعدة البيانات. غالباً متغيّرات الاتصال ناقصة أو غير صحيحة.',
+                'التطبيق يعمل، لكنه لا يستطيع الوصول إلى قاعدة البيانات.',
                 [
-                    'تأكد من ضبط <code>DB_CONNECTION</code> (مثلاً <code>pgsql</code>) — إن غاب يحاول التطبيق الاتصال بـ MySQL محلي.',
-                    'راجع <code>DB_HOST</code> و<code>DB_PORT</code> و<code>DB_DATABASE</code> و<code>DB_USERNAME</code> و<code>DB_PASSWORD</code>.',
-                    'تأكد من تفعيل المتغيّرات لبيئة Production، ثم أعد النشر.',
+                    'تأكد من ضبط <code>DB_PASSWORD</code> في متغيّرات بيئة المشروع لبيئة Production.',
+                    'بقيّة بيانات الاتصال مضبوطة في المستودع — عدّلها في <code>bootstrap/deployment-env.php</code> إن تغيّرت.',
+                    'أعد النشر بعد أي تعديل على المتغيّرات.',
                 ],
-                '<strong>Database unreachable.</strong> Check <code>DB_CONNECTION</code> (it falls back to '
-                .'MySQL on localhost when unset), plus <code>DB_HOST</code>, <code>DB_PORT</code>, '
-                .'<code>DB_DATABASE</code>, <code>DB_USERNAME</code> and <code>DB_PASSWORD</code>. '
-                .'Set them for Production, then redeploy.',
-                'المحرّك المستخدم حالياً: <code>'.e($driver).'</code> — التشخيص: '.$reason
-                .'<br><br>المتغيّرات التي وصلت فعلاً إلى بيئة التشغيل:<br>'.$inventory
+                '<strong>Database unreachable.</strong> Set <code>DB_PASSWORD</code> in the project\'s '
+                .'environment variables for Production, then redeploy. The remaining connection '
+                .'details live in <code>bootstrap/deployment-env.php</code>.',
+                'المحرّك المستخدم حالياً: <code>'.e((string) config('database.default')).'</code>'
+                .' — التشخيص: '.$this->connectionFailureReason($e)
             ), 503);
         });
     }
@@ -110,7 +106,7 @@ class Handler extends ExceptionHandler
         }
 
         if (str_starts_with($sqlState, '28') || $matches('password authentication failed') || $matches('Access denied')) {
-            return 'رُفضت بيانات الدخول — راجع <code>DB_USERNAME</code> و<code>DB_PASSWORD</code>.';
+            return 'رُفضت بيانات الدخول — راجع <code>DB_PASSWORD</code> (بلا ترميز) و<code>DB_USERNAME</code>.';
         }
 
         if ($sqlState === '3D000' || $matches('does not exist')) {
@@ -123,6 +119,10 @@ class Handler extends ExceptionHandler
 
         if ($matches('timed out') || $matches('timeout')) {
             return 'انتهت مهلة الاتصال — تحقق من <code>DB_HOST</code> و<code>DB_PORT</code> (استخدم Session Pooler على 5432).';
+        }
+
+        if ($matches('no password supplied')) {
+            return 'لم تُرسَل كلمة مرور — أضف <code>DB_PASSWORD</code> في متغيّرات البيئة.';
         }
 
         return 'رُفض الاتصال بالخادم — راجع <code>DB_HOST</code> و<code>DB_PORT</code>.';
@@ -140,27 +140,5 @@ class Handler extends ExceptionHandler
         }
 
         return (string) $e->getCode();
-    }
-
-    /**
-     * Which connection variables actually reached the runtime. Names and
-     * presence only — values are never rendered.
-     */
-    protected function environmentInventory(): string
-    {
-        $names = [
-            'DB_CONNECTION', 'DB_HOST', 'DB_PORT', 'DB_DATABASE',
-            'DB_USERNAME', 'DB_PASSWORD', 'DB_SSLMODE', 'DATABASE_URL',
-        ];
-
-        $parts = [];
-
-        foreach ($names as $name) {
-            $value = getenv($name);
-            $isSet = $value !== false && trim((string) $value) !== '';
-            $parts[] = ($isSet ? '✅' : '❌').' <code>'.$name.'</code>';
-        }
-
-        return implode(' &nbsp; ', $parts);
     }
 }
