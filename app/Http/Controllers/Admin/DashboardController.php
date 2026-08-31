@@ -12,8 +12,8 @@ class DashboardController extends Controller
     public function index()
     {
         $data = [
-            'totalSales' => Order::where('status', 'completed')->sum('total_amount'),
-            'todaySales' => Order::whereDate('created_at', today())->where('status', 'completed')->sum('total_amount'),
+            'totalSales' => Order::where('status', 'completed')->sum('total'),
+            'todaySales' => Order::whereDate('created_at', today())->where('status', 'completed')->sum('total'),
             'totalOrders' => Order::count(),
             'completedOrders' => Order::where('status', 'completed')->count(),
             'totalVendors' => Vendor::where('status', 'active')->count(),

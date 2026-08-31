@@ -25,7 +25,7 @@ class OrderService
         $order = Order::create([
             'customer_id' => Auth::check() ? Auth::id() : null,
             'guest_email' => $payer['email_address'] ?? null,
-            'total_amount' => $amount,
+            'total' => $amount,
             'status' => 'completed',
         ]);
 

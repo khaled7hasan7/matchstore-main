@@ -16,12 +16,12 @@ class DashboardController extends Controller
         $data = [
             'totalSales' => Order::where('vendor_id', $vendorId)
                 ->where('status', 'completed')
-                ->sum('total_amount'),
+                ->sum('total'),
 
             'todaySales' => Order::where('vendor_id', $vendorId)
                 ->where('status', 'completed')
                 ->whereDate('created_at', today())
-                ->sum('total_amount'),
+                ->sum('total'),
 
             'totalOrders' => Order::where('vendor_id', $vendorId)->count(),
 

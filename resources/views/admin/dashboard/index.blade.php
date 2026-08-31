@@ -347,14 +347,14 @@
                                                 @endif
                                             </td>
                                             <td>{{ $order->created_at->format('M d, Y') }}</td>
-                                            <td><strong>${{ number_format($order->total_amount, 2) }}</strong></td>
+                                            <td><strong>{{ currency_symbol() }}{{ number_format(convert_price($order->total), 2) }}</strong></td>
                                             <td>
                                                 @php
                                                     $statusColors = [
                                                         'pending' => 'warning',
                                                         'processing' => 'info',
                                                         'completed' => 'success',
-                                                        'cancelled' => 'danger',
+                                                        'canceled' => 'danger',
                                                     ];
                                                     $color = $statusColors[$order->status] ?? 'secondary';
                                                 @endphp

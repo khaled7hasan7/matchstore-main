@@ -37,7 +37,7 @@ class OrderController extends Controller
                 return 'N/A';
             })
             ->addColumn('order_date', fn (Order $order) => $order->created_at?->format('Y-m-d H:i'))
-            ->addColumn('total_price', fn (Order $order) => number_format((float) $order->total_amount, 2))
+            ->addColumn('total_price', fn (Order $order) => number_format((float) $order->total, 2))
             ->editColumn('status', fn (Order $order) => ucfirst($order->status))
             ->addColumn('action', function (Order $order) {
                 return '
