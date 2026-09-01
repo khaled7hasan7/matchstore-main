@@ -90,7 +90,9 @@ class FalakSetup extends Command
             ['المستخدم', $config['username'] ?? '—'],
         ]);
 
-        if (! str_contains((string) ($config['host'] ?? ''), 'supabase')) {
+        // Only worth flagging on a host: running against a local database is
+        // the point when you are developing, not a mistake.
+        if (app()->environment('production') && ! str_contains((string) ($config['host'] ?? ''), 'supabase')) {
             $this->warn('  هذه ليست قاعدة Supabase — الموقع المنشور لن يرى هذه التغييرات.');
             $this->newLine();
         }
@@ -116,9 +118,11 @@ class FalakSetup extends Command
         }
 
         $rows[] = ['اسم المتجر', DB::table('site_settings')->value('site_name') ?: '—'];
-        $rows[] = ['قرص الرفع', config('filesystems.disks.public.driver') === 'supabase'
-            ? 'Supabase Storage'
-            : 'محلي — الرفع من لوحة الأدمن لن ينجح على Vercel'];
+        $rows[] = ['قرص الرفع', match (true) {
+            config('filesystems.disks.public.driver') === 'supabase' => 'Supabase Storage',
+            ! app()->environment('production') => 'محلي (storage/app/public)',
+            default => 'محلي — الرفع من لوحة الأدمن لن ينجح على Vercel',
+        }];
 
         $this->newLine();
         $this->line('  <options=bold>الحالة الآن</>');
