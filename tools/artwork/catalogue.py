@@ -32,7 +32,7 @@ CATEGORIES = [
 ]
 
 BRANDS = [
-    ('falak-basic',  'فلك بيسيك',   'Falak Basic',   'خط الأساسيات اليومية من فلك ستور'),
+    ('falak-basic',  'فلك بيسيك',   'Falak Basic',   'خط الأساسيات اليومية من Falak Store'),
     ('urban-fit',    'أوربان فِت',  'Urban Fit',     'قصّات عصرية للحياة اليومية والرياضة'),
     ('orchid',       'أوركيد',      'Orchid',        'أزياء نسائية بلمسة أنيقة'),
     ('north-line',   'نورث لاين',   'North Line',    'ملابس شتوية وجاكيتات'),
@@ -41,9 +41,16 @@ BRANDS = [
 ]
 
 # (slug, category, brand, ar, en, shape, colors, sizes, price, discount, stock, ar-desc)
+
+COUPONS = [
+    ('WELCOME10', 'percentage', 10, 365, 'خصم 10% على أول طلب'),
+    ('FALAK15',   'percentage', 15, 90,  'خصم 15% على تشكيلة الموسم'),
+    ('SAVE5',     'fixed',      5,  180, 'خصم 5 دنانير على الطلبات'),
+    ('WINTER20',  'percentage', 20, 120, 'خصم 20% على الملابس الشتوية'),
+]
+
 PRODUCTS = [
-    # --- men ---
-    # prices below are in JOD
+    # ---------------------------------------------------------------- men
     ('mens-oxford-shirt', 'men', 'falak-basic', 'قميص أوكسفورد كلاسيكي', 'Classic Oxford Shirt',
      'shirt', ['white', 'navy', 'sky'], APPAREL_SIZES, 19.90, None, 40,
      'قميص أوكسفورد قطن 100% بقصّة مستقيمة، مناسب للعمل والمناسبات اليومية.'),
@@ -57,13 +64,31 @@ PRODUCTS = [
      'jacket', ['navy', 'black'], APPAREL_SIZES, 39.00, 32.00, 25,
      'جاكيت جينز بأزرار معدنية وجيوب أمامية، قطعة تدوم لسنوات.'),
     ('mens-wool-coat', 'men', 'north-line', 'معطف صوف شتوي', 'Wool Winter Coat',
-     'jacket', ['grey', 'brown', 'black'], APPAREL_SIZES, 79.00, None, 18,
+     'jacket', ['grey', 'brown', 'black'], APPAREL_SIZES, 79.00, 64.00, 18,
      'معطف صوف بطول متوسط وبطانة دافئة، مصمم للشتاء البارد.'),
     ('mens-polo-shirt', 'men', 'urban-fit', 'بولو بأكمام قصيرة', 'Short Sleeve Polo',
      'tshirt', ['navy', 'burgundy', 'white'], APPAREL_SIZES, 14.50, None, 60,
      'قميص بولو بياقة مضلّعة وخامة بيكيه، بين الرسمي والكاجوال.'),
+    ('mens-knit-sweater', 'men', 'north-line', 'كنزة صوف', 'Wool Sweater',
+     'sweater', ['navy', 'grey', 'burgundy'], APPAREL_SIZES, 27.00, 21.50, 42,
+     'كنزة صوف محبوكة بياقة دائرية وأساور مضلّعة، دافئة بلا ثقل.'),
+    ('mens-flannel-shirt', 'men', 'north-line', 'قميص فلانيل', 'Flannel Shirt',
+     'shirt', ['burgundy', 'olive', 'grey'], APPAREL_SIZES, 22.00, None, 38,
+     'قميص فلانيل قطني ناعم الملمس، مثالي للطقس البارد فوق تيشيرت.'),
+    ('mens-linen-shirt', 'men', 'falak-basic', 'قميص كتّان صيفي', 'Linen Summer Shirt',
+     'shirt', ['white', 'beige', 'sky'], APPAREL_SIZES, 21.00, 16.90, 44,
+     'قميص كتّان خفيف يسمح بمرور الهواء، الخيار الأول في حرّ الصيف.'),
+    ('mens-cargo-shorts', 'men', 'urban-fit', 'شورت كارجو', 'Cargo Shorts',
+     'shorts', ['olive', 'beige', 'black'], APPAREL_SIZES, 16.00, None, 52,
+     'شورت كارجو بجيوب جانبية وخصر مرن، عملي في الرحلات والصيف.'),
+    ('mens-slim-jeans', 'men', 'falak-basic', 'جينز سليم', 'Slim Fit Jeans',
+     'trousers', ['navy', 'black', 'grey'], APPAREL_SIZES, 26.50, 21.00, 48,
+     'جينز بقصّة سليم وقماش مرن يحافظ على شكله بعد الغسيل.'),
+    ('mens-bomber-jacket', 'men', 'urban-fit', 'جاكيت بومبر', 'Bomber Jacket',
+     'jacket', ['black', 'olive'], APPAREL_SIZES, 42.00, None, 22,
+     'جاكيت بومبر خفيف بأساور مضلّعة وسحّاب كامل، يناسب الربيع والخريف.'),
 
-    # --- women ---
+    # ---------------------------------------------------------------- women
     ('womens-midi-dress', 'women', 'orchid', 'فستان ميدي', 'Midi Dress',
      'dress', ['burgundy', 'navy', 'olive'], APPAREL_SIZES, 42.00, 34.00, 30,
      'فستان ميدي بقصّة انسيابية وحزام خصر، مناسب للمناسبات والعمل.'),
@@ -79,8 +104,29 @@ PRODUCTS = [
     ('womens-trench-coat', 'women', 'north-line', 'معطف ترنش', 'Trench Coat',
      'jacket', ['beige', 'black'], APPAREL_SIZES, 68.00, 55.00, 16,
      'معطف ترنش كلاسيكي بحزام خصر وياقة عريضة، قطعة لا تخرج عن الموضة.'),
+    ('womens-midi-skirt', 'women', 'orchid', 'تنورة ميدي', 'Midi Skirt',
+     'skirt', ['black', 'burgundy', 'beige'], APPAREL_SIZES, 23.00, 18.50, 40,
+     'تنورة ميدي بقصّة A وخصر عالٍ، تناسب العمل والمناسبات.'),
+    ('womens-pleated-skirt', 'women', 'orchid', 'تنورة بليسيه', 'Pleated Skirt',
+     'skirt', ['navy', 'olive', 'pink'], APPAREL_SIZES, 25.00, None, 32,
+     'تنورة بليسيه بطيّات ثابتة لا تفقد شكلها، حركة ناعمة مع المشي.'),
+    ('womens-cardigan', 'women', 'orchid', 'كارديجان طويل', 'Long Cardigan',
+     'sweater', ['beige', 'grey', 'burgundy'], APPAREL_SIZES, 28.00, 22.90, 36,
+     'كارديجان طويل مفتوح من الأمام، طبقة دافئة فوق أي إطلالة.'),
+    ('womens-satin-blouse', 'women', 'orchid', 'بلوزة ساتان', 'Satin Blouse',
+     'shirt', ['pink', 'navy', 'white'], APPAREL_SIZES, 24.50, None, 30,
+     'بلوزة ساتان بلمعة خفيفة وأزرار مخفية، أنيقة للسهرات.'),
+    ('womens-mom-jeans', 'women', 'falak-basic', 'جينز مام', 'Mom Jeans',
+     'trousers', ['navy', 'sky'], APPAREL_SIZES, 27.50, 22.00, 38,
+     'جينز بخصر عالٍ وقصّة مستقيمة مريحة، من كلاسيكيات خزانة الملابس.'),
+    ('womens-maxi-dress', 'women', 'orchid', 'فستان ماكسي', 'Maxi Dress',
+     'dress', ['navy', 'burgundy', 'grey'], APPAREL_SIZES, 39.00, None, 26,
+     'فستان ماكسي طويل بأكمام واسعة، خامة تنسدل بشكل جميل.'),
+    ('womens-oversize-tee', 'women', 'urban-fit', 'تيشيرت أوفرسايز', 'Oversize T-Shirt',
+     'tshirt', ['white', 'black', 'pink', 'sky'], APPAREL_SIZES, 9.50, 7.50, 85,
+     'تيشيرت أوفرسايز قطني بقصّة فضفاضة، مريح للبيت والخروج.'),
 
-    # --- modest ---
+    # ---------------------------------------------------------------- modest
     ('abaya-classic-black', 'modest', 'suha', 'عباية كلاسيكية', 'Classic Abaya',
      'abaya', ['black'], APPAREL_SIZES, 45.00, None, 50,
      'عباية سوداء بقصّة مستقيمة من قماش الكريب، خفيفة وغير شفافة.'),
@@ -93,8 +139,20 @@ PRODUCTS = [
     ('hijab-scarf-set', 'modest', 'suha', 'طرحة قطن', 'Cotton Hijab',
      'scarf', ['black', 'beige', 'pink', 'grey'], ONE_SIZE, 5.50, None, 150,
      'طرحة قطن ناعمة لا تنزلق، متوفرة بألوان أساسية تناسب كل الإطلالات.'),
+    ('abaya-everyday', 'modest', 'suha', 'عباية يومية', 'Everyday Abaya',
+     'abaya', ['black', 'grey'], APPAREL_SIZES, 36.00, 29.00, 44,
+     'عباية يومية بخامة لا تتجعّد، عملية للدوام والتسوّق.'),
+    ('modest-tunic', 'modest', 'suha', 'تونيك طويل', 'Long Tunic',
+     'sweater', ['beige', 'olive', 'navy'], APPAREL_SIZES, 21.00, None, 40,
+     'تونيك طويل يغطي حتى منتصف الفخذ، ينسّق مع البناطيل الواسعة.'),
+    ('modest-wide-trousers', 'modest', 'suha', 'بنطال واسع محتشم', 'Modest Wide Trousers',
+     'trousers', ['black', 'navy', 'beige'], APPAREL_SIZES, 22.50, 18.00, 46,
+     'بنطال واسع بخصر مطاطي وقماش لا يشفّ، مريح تحت العباية أو التونيك.'),
+    ('hijab-chiffon', 'modest', 'suha', 'طرحة شيفون', 'Chiffon Hijab',
+     'scarf', ['pink', 'sky', 'white', 'burgundy'], ONE_SIZE, 6.90, None, 120,
+     'طرحة شيفون خفيفة بحواف مخيّطة، انسدال ناعم ولمعة هادئة.'),
 
-    # --- kids ---
+    # ---------------------------------------------------------------- kids
     ('kids-tshirt-pack', 'kids', 'little-star', 'تيشيرت أطفال', 'Kids T-Shirt',
      'tshirt', ['sky', 'pink', 'white'], APPAREL_SIZES, 6.50, None, 90,
      'تيشيرت قطن للأطفال بألوان مبهجة، خامة آمنة على البشرة الحساسة.'),
@@ -105,10 +163,22 @@ PRODUCTS = [
      'trousers', ['navy', 'black'], APPAREL_SIZES, 12.00, None, 70,
      'بنطال جينز مرن بخصر قابل للتعديل، يتحمّل حركة الأطفال ولعبهم.'),
     ('kids-winter-jacket', 'kids', 'north-line', 'جاكيت أطفال شتوي', 'Kids Winter Jacket',
-     'jacket', ['sky', 'burgundy'], APPAREL_SIZES, 28.00, None, 26,
+     'jacket', ['sky', 'burgundy'], APPAREL_SIZES, 28.00, 22.50, 26,
      'جاكيت شتوي بحشوة دافئة وسحّاب أمامي وقلنسوة، مقاوم للرذاذ.'),
+    ('kids-dress', 'kids', 'little-star', 'فستان بناتي', 'Girls Dress',
+     'dress', ['pink', 'sky', 'white'], APPAREL_SIZES, 14.50, None, 48,
+     'فستان بناتي قطني بقصّة واسعة، مريح للّعب والمناسبات معاً.'),
+    ('kids-sweater', 'kids', 'little-star', 'كنزة أطفال', 'Kids Sweater',
+     'sweater', ['burgundy', 'olive', 'grey'], APPAREL_SIZES, 15.00, 11.90, 55,
+     'كنزة أطفال محبوكة لا تسبب حكة، دافئة لأيام المدرسة.'),
+    ('kids-shorts', 'kids', 'little-star', 'شورت أطفال', 'Kids Shorts',
+     'shorts', ['navy', 'olive', 'sky'], APPAREL_SIZES, 8.50, None, 80,
+     'شورت أطفال قطني بخصر مطاطي، خفيف ويجفّ بسرعة.'),
+    ('kids-skirt', 'kids', 'little-star', 'تنورة بناتي', 'Girls Skirt',
+     'skirt', ['pink', 'navy'], APPAREL_SIZES, 10.90, None, 52,
+     'تنورة بناتي بطيّات وخصر مطاطي مريح.'),
 
-    # --- sportswear ---
+    # ---------------------------------------------------------------- sportswear
     ('sport-hoodie', 'sportswear', 'urban-fit', 'هودي رياضي', 'Sport Hoodie',
      'hoodie', ['black', 'grey', 'olive'], APPAREL_SIZES, 22.00, 18.50, 65,
      'هودي رياضي بخامة تمتص العرق، مناسب للتمرين وللخروج اليومي.'),
@@ -119,10 +189,22 @@ PRODUCTS = [
      'tshirt', ['black', 'sky', 'olive'], APPAREL_SIZES, 11.50, None, 85,
      'تيشيرت تدريب سريع الجفاف بتقنية تهوية عند الظهر.'),
     ('sport-track-jacket', 'sportswear', 'urban-fit', 'جاكيت رياضي', 'Track Jacket',
-     'jacket', ['navy', 'black'], APPAREL_SIZES, 27.00, None, 40,
+     'jacket', ['navy', 'black'], APPAREL_SIZES, 27.00, 21.90, 40,
      'جاكيت رياضي خفيف بسحّاب كامل وجيوب جانبية.'),
+    ('sport-shorts', 'sportswear', 'urban-fit', 'شورت رياضي', 'Training Shorts',
+     'shorts', ['black', 'navy', 'grey'], APPAREL_SIZES, 12.50, 9.90, 90,
+     'شورت رياضي خفيف بجيب جانبي ورباط خصر، لا يعيق الحركة.'),
+    ('sport-sweatshirt', 'sportswear', 'urban-fit', 'سويت شيرت', 'Sweatshirt',
+     'sweater', ['grey', 'black', 'olive'], APPAREL_SIZES, 20.00, None, 58,
+     'سويت شيرت بقصّة عادية وبطانة ناعمة من الداخل.'),
+    ('sport-compression-tee', 'sportswear', 'urban-fit', 'تيشيرت ضاغط', 'Compression Tee',
+     'tshirt', ['black', 'navy'], APPAREL_SIZES, 14.00, None, 62,
+     'تيشيرت ضاغط يدعم العضلات أثناء التمرين ويجفّ سريعاً.'),
+    ('sport-leggings', 'sportswear', 'urban-fit', 'ليقنز رياضي', 'Sport Leggings',
+     'trousers', ['black', 'grey', 'burgundy'], APPAREL_SIZES, 17.50, 13.90, 68,
+     'ليقنز رياضي بخصر عالٍ وقماش مرن غير شفّاف.'),
 
-    # --- shoes ---
+    # ---------------------------------------------------------------- shoes
     ('sneakers-daily', 'shoes', 'urban-fit', 'حذاء رياضي يومي', 'Daily Sneakers',
      'sneaker', ['white', 'black'], SHOE_SIZES, 32.00, 26.00, 48,
      'حذاء رياضي بنعل مطاطي مرن وبطانة داخلية مبطّنة، خفيف على القدم.'),
@@ -130,10 +212,19 @@ PRODUCTS = [
      'sneaker', ['grey', 'navy'], SHOE_SIZES, 44.00, None, 30,
      'حذاء جري بنعل ماص للصدمات ووجه شبكي يسمح بمرور الهواء.'),
     ('shoes-classic-leather', 'shoes', 'north-line', 'حذاء جلد كلاسيكي', 'Classic Leather Shoes',
-     'sneaker', ['brown', 'black'], SHOE_SIZES, 55.00, None, 22,
+     'sneaker', ['brown', 'black'], SHOE_SIZES, 55.00, 45.00, 22,
      'حذاء جلد طبيعي بتصميم كلاسيكي، مناسب للعمل والمناسبات الرسمية.'),
+    ('shoes-canvas', 'shoes', 'falak-basic', 'حذاء كانفاس', 'Canvas Shoes',
+     'sneaker', ['white', 'navy', 'olive'], SHOE_SIZES, 19.90, None, 64,
+     'حذاء كانفاس خفيف بنعل مطاطي، بسيط ويناسب كل الإطلالات الكاجوال.'),
+    ('shoes-womens-flat', 'shoes', 'orchid', 'حذاء نسائي مسطّح', 'Women Flat Shoes',
+     'sneaker', ['beige', 'black', 'pink'], SHOE_SIZES, 24.00, 19.00, 40,
+     'حذاء نسائي مسطّح ببطانة ناعمة، مريح للمشي الطويل.'),
+    ('shoes-kids-sneakers', 'shoes', 'little-star', 'حذاء أطفال رياضي', 'Kids Sneakers',
+     'sneaker', ['sky', 'white', 'pink'], SHOE_SIZES, 18.00, None, 56,
+     'حذاء أطفال بلاصق سهل الارتداء ونعل مرن يتبع حركة القدم.'),
 
-    # --- bags ---
+    # ---------------------------------------------------------------- bags
     ('bag-tote', 'bags', 'orchid', 'حقيبة توت', 'Tote Bag',
      'bag', ['beige', 'black', 'brown'], ONE_SIZE, 21.00, None, 44,
      'حقيبة توت واسعة تتسع للحاسوب المحمول والأغراض اليومية.'),
@@ -143,89 +234,61 @@ PRODUCTS = [
     ('bag-crossbody', 'bags', 'orchid', 'حقيبة كروس صغيرة', 'Small Crossbody Bag',
      'bag', ['burgundy', 'beige', 'black'], ONE_SIZE, 16.00, None, 58,
      'حقيبة كروس صغيرة بحزام قابل للتعديل، تكفي للأساسيات.'),
+    ('bag-travel', 'bags', 'north-line', 'حقيبة سفر', 'Travel Duffel',
+     'bag', ['black', 'brown'], ONE_SIZE, 38.00, 31.00, 24,
+     'حقيبة سفر بقماش مقاوم للماء وحزام كتف، تكفي لعطلة قصيرة.'),
+    ('bag-laptop', 'bags', 'urban-fit', 'حقيبة لابتوب', 'Laptop Sleeve',
+     'bag', ['grey', 'navy', 'black'], ONE_SIZE, 14.50, None, 66,
+     'حقيبة لابتوب مبطّنة حتى 15 بوصة، رفيعة تدخل داخل حقيبة الظهر.'),
 
-    # --- accessories ---
+    # ---------------------------------------------------------------- accessories
     ('cap-baseball', 'accessories', 'urban-fit', 'كاب رياضي', 'Baseball Cap',
      'cap', ['black', 'navy', 'olive'], ONE_SIZE, 6.90, None, 110,
      'كاب قطني بحزام خلفي قابل للتعديل، يناسب كل المقاسات.'),
     ('scarf-winter', 'accessories', 'north-line', 'وشاح شتوي', 'Winter Scarf',
      'scarf', ['grey', 'burgundy', 'brown'], ONE_SIZE, 9.50, 7.50, 76,
      'وشاح شتوي محبوك دافئ وناعم، لا يسبب حكة على الرقبة.'),
+    ('cap-bucket', 'accessories', 'urban-fit', 'قبعة باكيت', 'Bucket Hat',
+     'cap', ['beige', 'black', 'olive'], ONE_SIZE, 8.50, None, 84,
+     'قبعة باكيت قطنية بحواف عريضة تحمي من الشمس.'),
+    ('scarf-silk', 'accessories', 'orchid', 'وشاح حريري', 'Silk Scarf',
+     'scarf', ['pink', 'navy', 'burgundy'], ONE_SIZE, 12.00, 9.50, 58,
+     'وشاح حريري بملمس بارد ولمعة هادئة، ينسّق على الرقبة أو الحقيبة.'),
+    ('cap-knit-beanie', 'accessories', 'north-line', 'قبعة صوف', 'Knit Beanie',
+     'cap', ['grey', 'black', 'burgundy'], ONE_SIZE, 7.50, None, 92,
+     'قبعة صوف محبوكة تغطي الأذنين، خفيفة ودافئة.'),
 ]
 
 
 def emit_artwork():
-    pairs = set()
-    for p in PRODUCTS:
-        shape, colors = p[5], p[6]
-        for c in colors:
-            pairs.add((shape, c))
+    """Every image the storefront shows, drawn from the lists above."""
+    OUT.mkdir(parents=True, exist_ok=True)
 
-    for shape, ckey in sorted(pairs):
-        hexv = COLORS[ckey][2]
-        write(f'{shape}-{ckey}.svg', product_image(shape, hexv, 'thumb'))
+    pairs = sorted({(p[5], c) for p in PRODUCTS for c in p[6]})
+    for i, (shape, ckey) in enumerate(pairs):
+        (OUT / f'{shape}-{ckey}.svg').write_text(
+            product(shape, COLORS[ckey][2], uid=f'p{i}'), encoding='utf-8')
 
-    # Category tiles: the garment on a tinted ground. Each silhouette sits in a
-    # different band of the 600 box, so it is nudged onto the circle by hand.
-    nudge = {
-        'sneaker': (0, -92, 0.92), 'bag': (0, -14, 0.94), 'cap': (0, 34, 1.0),
-        'scarf': (0, -12, 0.92), 'abaya': (0, -22, 0.9), 'dress': (0, -20, 0.9),
-        'shirt': (0, -8, 0.94), 'tshirt': (0, 6, 0.98), 'hoodie': (0, -10, 0.94),
-    }
     for slug, ar, en, shape, tint, desc in CATEGORIES:
-        dx, dy, sc = nudge.get(shape, (0, 0, 1.0))
-        cx = 300 - 300 * sc + dx
-        cy = 300 - 300 * sc + dy
-        body = (
-            f'<circle cx="300" cy="300" r="235" fill="#ffffff" opacity="0.55"/>'
-            f'<g transform="translate({cx},{cy}) scale({sc})">'
-            + SHAPES[shape]('#ffffff', tint) + '</g>'
-        )
-        write(f'category-{slug}.svg', svg(600, 600, body, bg=tint))
+        (OUT / f'category-{slug}.svg').write_text(
+            tile(shape, tint, uid='c' + slug[:3]), encoding='utf-8')
 
-    # Hero banners: wide, quiet, no text — the theme writes the copy on top.
-    heroes = [
-        ('banner-new-season', '#2b3a67', '#4d6295', ['dress', 'jacket', 'bag']),
-        ('banner-sale',       '#7c2f3d', '#a8515f', ['tshirt', 'sneaker', 'cap']),
-        ('banner-modest',     '#3f4a5a', '#67748a', ['abaya', 'scarf', 'dress']),
-    ]
-    for name, c1, c2, shapes in heroes:
-        gid = name.replace('-', '')
-        defs = (
-            f'<linearGradient id="{gid}" x1="0" y1="0" x2="1" y2="1">'
-            f'<stop offset="0" stop-color="{c1}"/><stop offset="1" stop-color="{c2}"/></linearGradient>'
-        )
-        body = f'<rect width="1600" height="700" fill="url(#{gid})"/>'
-        body += '<circle cx="1320" cy="140" r="230" fill="#ffffff" opacity="0.07"/>'
-        body += '<circle cx="200" cy="640" r="180" fill="#ffffff" opacity="0.06"/>'
-        for i, shape in enumerate(shapes):
-            x = 830 + i * 195
-            body += (
-                f'<g transform="translate({x},150) scale(0.62)" opacity="0.9">'
-                + SHAPES[shape]('#ffffff', c1) + '</g>'
-            )
-        write(f'{name}.svg', svg(1600, 700, body, bg=c1, extra_defs=defs))
+    for name, shapes in [
+        ('banner-new-season', ['dress', 'jacket', 'bag']),
+        ('banner-sale', ['tshirt', 'sneaker', 'cap']),
+        ('banner-modest', ['abaya', 'scarf', 'dress']),
+    ]:
+        (OUT / f'{name}.svg').write_text(banner(name, shapes), encoding='utf-8')
 
-    promos = [
-        ('promo-women', '#8d5a72', '#c08fa3', 'dress'),
-        ('promo-men',   '#2b3a67', '#5f76ad', 'shirt'),
-        ('promo-kids',  '#c98f4b', '#e6bb85', 'tshirt'),
-    ]
-    for name, c1, c2, shape in promos:
-        gid = name.replace('-', '')
-        defs = (
-            f'<linearGradient id="{gid}" x1="0" y1="0" x2="1" y2="1">'
-            f'<stop offset="0" stop-color="{c1}"/><stop offset="1" stop-color="{c2}"/></linearGradient>'
-        )
-        body = f'<rect width="900" height="700" fill="url(#{gid})"/>'
-        body += '<circle cx="720" cy="120" r="180" fill="#ffffff" opacity="0.08"/>'
-        body += f'<g transform="translate(300,60) scale(0.85)" opacity="0.92">{SHAPES[shape]("#ffffff", c1)}</g>'
-        write(f'{name}.svg', svg(900, 700, body, bg=c1, extra_defs=defs))
+    for name, c1, c2, shape in [
+        ('promo-women', '#5d2b46', '#b06a8c', 'dress'),
+        ('promo-men', '#071229', '#2f5fae', 'shirt'),
+        ('promo-kids', '#8a5320', '#e0a95f', 'tshirt'),
+    ]:
+        (OUT / f'{name}.svg').write_text(promo(name, shape, c1, c2), encoding='utf-8')
 
-    # Brand mark: an orbit — "فلك".
-    # Brand blue on a light rim so the mark reads on the light storefront
-    # header and on the dark admin panel alike.
-    logo = (
+    # The brand mark, on no background so it reads on light and dark alike.
+    mark = (
         '<circle cx="150" cy="150" r="60" fill="#7FB3FF"/>'
         '<circle cx="150" cy="150" r="52" fill="#1F6FEB"/>'
         '<path d="M150 98 A52 52 0 0 1 150 202 A34 52 0 0 0 150 98 Z" fill="#9FC8FF" opacity="0.55"/>'
@@ -233,11 +296,9 @@ def emit_artwork():
         'transform="rotate(-24 150 150)"/>'
         '<circle cx="258" cy="104" r="16" fill="#E9F1FF"/>'
     )
-    # No background rect: the mark sits on the dark admin panel and on the
-    # light storefront header alike.
-    write('falak-logo.svg',
-          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" '
-          'width="300" height="300" role="img">' + logo + '</svg>')
+    (OUT / 'falak-logo.svg').write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300" '
+        f'role="img">{mark}</svg>', encoding='utf-8')
 
     return len(list(OUT.glob('*.svg')))
 
@@ -306,7 +367,7 @@ def emit_php():
     A('    \'banners\' => [')
     banners = [
         ('banner-new-season', 'موسم جديد وصل', 'New Season Has Landed',
-         'تشكيلة الخريف والشتاء من فلك ستور — قصّات جديدة وخامات أدفأ.',
+         'تشكيلة الخريف والشتاء من Falak Store — قصّات جديدة وخامات أدفأ.',
          'The autumn and winter collection from Falak Store.'),
         ('banner-sale', 'خصومات حتى 30%', 'Up to 30% Off',
          'اختر من القطع المخفّضة قبل نفاد المقاسات.',
@@ -340,6 +401,13 @@ def emit_php():
         A(f"            'en' => ['badge_text' => {php_value(ben)}, 'title' => {php_value(ten)}, 'button_text' => {php_value(btnen)}],")
         A(f"            'button_url' => {php_value(url)},")
         A(f"            'image' => '/images/catalog/{key}.svg',")
+        A('        ],')
+    A('    ],')
+    A('    \'coupons\' => [')
+    for code, kind, value, days, label in COUPONS:
+        A('        [')
+        A(f"            'code' => '{code}', 'type' => '{kind}', 'discount' => {value},")
+        A(f"            'valid_days' => {days}, 'label' => {php_value(label)},")
         A('        ],')
     A('    ],')
     A('];')

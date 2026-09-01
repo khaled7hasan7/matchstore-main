@@ -115,6 +115,9 @@ BODY = {
     'cap': 'M236 706 Q236 402 450 402 Q664 402 664 706 Z M236 706 Q160 712 150 760 Q144 802 204 804 L696 804 Q756 802 750 760 Q740 712 664 706 Z',
     'bag': 'M262 468 L638 468 L662 500 L636 930 Q450 962 264 930 L238 500 Z',
     'sneaker': 'M164 862 Q166 632 322 596 Q424 574 476 656 L560 730 Q662 762 748 790 Q800 806 802 862 Z',
+    'sweater': 'M368 262 Q450 324 532 262 L606 278 L712 372 L742 596 L666 646 L578 470 L582 806 Q450 838 318 806 L322 470 L234 646 L158 596 L188 372 L294 278 Z',
+    'skirt': 'M330 290 L570 290 L596 470 Q640 700 654 900 Q450 946 246 900 Q260 700 304 470 Z',
+    'shorts': 'M304 292 L596 292 L614 452 L588 836 L484 836 L450 596 L416 836 L312 836 L286 452 Z',
 }
 
 FIT = {
@@ -123,6 +126,7 @@ FIT = {
     'jacket': (0, 80, 1.31), 'trousers': (0, -40, 1.06), 'dress': (0, -66, 1.02),
     'abaya': (0, -52, 0.98), 'scarf': (0, -48, 1.05), 'cap': (0, 4, 1.70),
     'bag': (0, -24, 1.34), 'sneaker': (-42, -222, 1.26),
+    'sweater': (0, 80, 1.28), 'skirt': (0, 8, 1.16), 'shorts': (0, 42, 1.24),
 }
 
 def tshirt(uid, c):
@@ -321,10 +325,65 @@ def sneaker(uid, c):
     )
 
 
+
+def sweater(uid, c):
+    """Long-sleeve knit: ribbed collar, cuffs and hem."""
+    e = edge(c)
+    body = BODY['sweater']
+    return (
+        f'<path d="{body}" fill="url(#f{uid})" stroke="{e}" stroke-width="4" stroke-linejoin="round"/>'
+        f'<path d="M368 262 Q450 322 532 262 Q450 292 368 262 Z" fill="url(#r{uid})" stroke="{e}" stroke-width="4"/>'
+        # ribbed cuffs and hem
+        + f'<path d="M172 620 L246 660 L268 618 L196 578 Z" fill="url(#r{uid})" stroke="{e}" stroke-width="3.5"/>'
+        + f'<path d="M728 620 L654 660 L632 618 L704 578 Z" fill="url(#r{uid})" stroke="{e}" stroke-width="3.5"/>'
+        + f'<rect x="322" y="770" width="256" height="52" rx="7" fill="url(#r{uid})" stroke="{e}" stroke-width="3.5"/>'
+        + ''.join(f'<line x1="{x}" y1="774" x2="{x}" y2="818" stroke="{e}" stroke-width="2" opacity="0.35"/>'
+                  for x in range(338, 578, 19))
+        # knit texture
+        + f'<g clip-path="url(#clip{uid})" opacity="0.16">'
+        + ''.join(f'<path d="M300 {y} Q450 {y + 16} 600 {y}" fill="none" stroke="{shade(c, 0.6)}" stroke-width="3"/>'
+                  for y in range(330, 780, 34))
+        + '</g>'
+        + fold('M340 420 L334 766 L310 764 L316 418 Z', c, 0.10)
+    )
+
+
+def skirt(uid, c):
+    """A-line skirt: waistband, panel seams, soft flare."""
+    e = edge(c)
+    body = BODY['skirt']
+    return (
+        f'<path d="{body}" fill="url(#f{uid})" stroke="{e}" stroke-width="4" stroke-linejoin="round"/>'
+        + f'<rect x="330" y="290" width="240" height="58" rx="6" fill="url(#r{uid})" stroke="{e}" stroke-width="4"/>'
+        + f'<circle cx="450" cy="319" r="9" fill="{shade(c, 1.35)}" stroke="{e}" stroke-width="2.5"/>'
+        + f'<g clip-path="url(#clip{uid})">'
+        + ''.join(fold(f'M{x} 360 Q{x - 16} 640 {x - 36} 900 L{x - 72} 898 Q{x - 46} 636 {x - 32} 358 Z', c, 0.09)
+                  for x in (410, 480, 550, 620))
+        + '</g>'
+        + seam('M258 892 Q450 940 642 892', c, 3, '16 12')
+    )
+
+
+def shorts(uid, c):
+    """Shorts: waistband with a drawcord, two legs, side seams."""
+    e = edge(c)
+    body = BODY['shorts']
+    return (
+        f'<path d="{body}" fill="url(#f{uid})" stroke="{e}" stroke-width="4" stroke-linejoin="round"/>'
+        + f'<rect x="304" y="292" width="292" height="58" rx="6" fill="url(#r{uid})" stroke="{e}" stroke-width="4"/>'
+        + f'<path d="M406 350 Q450 386 494 350" fill="none" stroke="{shade(c, 1.5)}" stroke-width="9" stroke-linecap="round"/>'
+        + f'<path d="M450 352 Q466 400 460 442" fill="none" stroke="{e}" stroke-width="3.5" stroke-dasharray="12 9"/>'
+        + fold('M356 452 L372 826 L336 828 L320 450 Z', c, 0.11)
+        + fold('M540 452 L578 826 L544 828 L524 450 Z', c, 0.08)
+        + seam('M320 832 L288 452', c, 3, '14 11') + seam('M580 832 L612 452', c, 3, '14 11')
+    )
+
+
 SHAPES = {
     'tshirt': tshirt, 'shirt': shirt, 'hoodie': hoodie, 'jacket': jacket,
     'trousers': trousers, 'dress': dress, 'abaya': abaya, 'scarf': scarf,
     'cap': cap, 'bag': bag, 'sneaker': sneaker,
+    'sweater': sweater, 'skirt': skirt, 'shorts': shorts,
 }
 
 # Where the ground shadow sits for each silhouette.
@@ -335,6 +394,8 @@ SHADOW = {
     'abaya': (450, 1116, 220, 32), 'scarf': (450, 1094, 170, 28),
     'cap': (450, 818, 300, 34), 'bag': (450, 962, 220, 32),
     'sneaker': (485, 962, 320, 28),
+    'sweater': (450, 840, 220, 34), 'skirt': (450, 934, 230, 32),
+    'shorts': (450, 868, 190, 30),
 }
 
 

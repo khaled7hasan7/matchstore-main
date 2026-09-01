@@ -637,12 +637,12 @@
 
                         <div class="row border-bottom pb-2 mb-2 mt-4">
                             <div class="col-6 col-md-4">{{ __('store.checkout.subtotal') }}</div>
-                            <div class="col-6 col-md-8 text-end" id="subtotal-display">${{ number_format($subtotal, 2) }}</div>
+                            <div class="col-6 col-md-8 text-end" id="subtotal-display">{{ order_amount($subtotal) }}</div>
                         </div>
                         @if($discount > 0)
                         <div class="row border-bottom pb-2 mb-2 text-success">
                             <div class="col-6 col-md-6">{{ __('store.checkout.discount') }} ({{ $coupon->code }})</div>
-                            <div class="col-6 col-md-6 text-end">-${{ number_format($discount, 2) }}</div>
+                            <div class="col-6 col-md-6 text-end">-{{ order_amount($discount) }}</div>
                         </div>
                         @endif
                         <div class="row border-bottom pb-2 mb-2">
@@ -653,7 +653,7 @@
                         </div>
                         <div class="row border-bottom pb-2 mb-2">
                             <div class="col-6 col-md-4">{{ __('store.checkout.total') }}</div>
-                            <div class="col-6 col-md-8 text-end"><span id="total-display">${{ number_format($total, 2) }}</span></div>
+                            <div class="col-6 col-md-8 text-end"><span id="total-display">{{ order_amount($total) }}</span></div>
                         </div>
 
                         <div class="mt-4">
@@ -687,7 +687,7 @@
             <div class="mobile-order-summary-inner">
                 <div class="mobile-summary-row">
                     <span>{{ __('store.checkout.subtotal') }}</span>
-                    <span id="mobile-subtotal-display">{{ $currency->symbol }}{{ number_format($subtotal, 2) }}</span>
+                    <span id="mobile-subtotal-display">{{ order_amount($subtotal) }}</span>
                 </div>
                 @if($discount > 0)
                 <div class="mobile-summary-row text-success">
@@ -701,7 +701,7 @@
                 </div>
                 <div class="mobile-summary-row">
                     <span>{{ __('store.checkout.total') }}</span>
-                    <span id="mobile-total-display">{{ $currency->symbol }}{{ number_format($total, 2) }}</span>
+                    <span id="mobile-total-display">{{ order_amount($total) }}</span>
                 </div>
             </div>
         </div>
@@ -829,6 +829,9 @@
 @endsection
 
 @section('js')
+{{-- The totals are re-formatted by more than one script block below, so the
+     store's currency symbol is declared once, globally. --}}
+<script>window.STORE_CURRENCY = @json(order_currency_symbol());</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script>
 // Shipping region and cost calculation
@@ -915,7 +918,7 @@ document.addEventListener("DOMContentLoaded", function () {
         .then(response => response.json())
         .then(data => {
             currentShippingCost = data.shipping_cost;
-            shippingCostDisplay.textContent = '$' + currentShippingCost.toFixed(2);
+            shippingCostDisplay.textContent = STORE_CURRENCY + currentShippingCost.toFixed(2);
             deliveryTimeDisplay.innerHTML = '<small>' + deliveryDays + ' {{ __('store.checkout.days') }}</small>';
             updateTotal();
         })
@@ -927,7 +930,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function updateTotal() {
         const total = Math.max(0, subtotal - discount) + currentShippingCost;
-        totalDisplay.textContent = '$' + total.toFixed(2);
+        totalDisplay.textContent = STORE_CURRENCY + total.toFixed(2);
     }
 });
 </script>
@@ -1242,7 +1245,7 @@ document.addEventListener("DOMContentLoaded", function() {
             .then(response => response.json())
             .then(data => {
                 mobileShippingCost = data.shipping_cost;
-                mobileShippingDisplay.textContent = '$' + mobileShippingCost.toFixed(2);
+                mobileShippingDisplay.textContent = STORE_CURRENCY + mobileShippingCost.toFixed(2);
                 mobileDeliveryTime.textContent = deliveryDays + ' {{ __('store.checkout.days') }}';
                 mobileDeliveryBadge.style.display = 'flex';
                 updateMobileTotal();
@@ -1258,7 +1261,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     function updateMobileTotal() {
         const total = Math.max(0, subtotal - discount) + mobileShippingCost;
-        const formattedTotal = '$' + total.toFixed(2);
+        const formattedTotal = STORE_CURRENCY + total.toFixed(2);
         mobileTotalDisplay.textContent = formattedTotal;
         if (mobileBarTotal) {
             mobileBarTotal.textContent = formattedTotal;

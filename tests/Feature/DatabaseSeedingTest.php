@@ -41,7 +41,7 @@ class DatabaseSeedingTest extends TestCase
         $this->assertSame(2, DB::table('languages')->where('active', true)->count());
 
         $this->assertDatabaseHas('site_settings', [
-            'site_name' => 'فلك ستور',
+            'site_name' => 'Falak Store',
             'default_currency' => 'JOD',
             'default_language' => 'ar',
         ]);
@@ -163,6 +163,51 @@ class DatabaseSeedingTest extends TestCase
         // with it. Those belong to customers, not to the seeder.
         $this->assertDatabaseHas('wishlists', ['product_id' => $product->id]);
         $this->assertDatabaseHas('products', ['id' => $product->id]);
+    }
+
+    public function test_every_variant_has_its_own_sku(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+
+        $total = DB::table('product_variants')->count();
+        $distinct = DB::table('product_variants')->distinct()->count('SKU');
+
+        // The SKU used to be cut from the slug, so womens-midi-dress and
+        // womens-midi-skirt collided and the seed died on the unique index.
+        $this->assertSame($total, $distinct, 'every variant needs a unique SKU');
+    }
+
+    public function test_the_shop_advertises_working_discount_codes(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+
+        $catalog = require database_path('data/falak-catalog.php');
+        $this->assertSame(count($catalog['coupons']), DB::table('coupons')->count());
+
+        foreach (DB::table('coupons')->get() as $coupon) {
+            // A code the storefront shows but checkout rejects as expired is
+            // worse than no code at all.
+            $this->assertTrue($coupon->expires_at > now(), $coupon->code.' must not be seeded already expired');
+        }
+    }
+
+    public function test_the_store_has_the_pages_a_buyer_looks_for(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+
+        foreach (['about-us', 'shipping-policy', 'returns-policy', 'faq'] as $slug) {
+            $this->assertDatabaseHas('pages', ['slug' => $slug, 'status' => true]);
+
+            $page = DB::table('pages')->where('slug', $slug)->first();
+            $this->assertSame(2, DB::table('page_translations')->where('page_id', $page->id)->count(),
+                $slug.' needs both languages');
+        }
+
+        // The stock about page named a different company.
+        $about = DB::table('pages')->where('slug', 'about-us')->value('id');
+        $body = DB::table('page_translations')->where('page_id', $about)->where('language_code', 'ar')->value('content');
+        $this->assertStringContainsString('Falak Store', $body);
+        $this->assertStringNotContainsString('MatchStore', $body);
     }
 
     /** @return array<string,int> */

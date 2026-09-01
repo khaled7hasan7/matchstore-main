@@ -38,7 +38,7 @@ class OrderController extends Controller
                 return $order->created_at?->format('Y-m-d H:i');
             })
             ->addColumn('total_price', function (Order $order) {
-                return number_format((float) $order->total, 2);
+                return order_amount($order->total);
             })
             ->editColumn('status', function (Order $order) {
                 $statusColors = [

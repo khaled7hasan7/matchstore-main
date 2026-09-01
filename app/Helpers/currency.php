@@ -89,3 +89,42 @@ if (! function_exists('currency_symbol')) {
         return activeCurrency()->symbol ?: '$';
     }
 }
+
+if (! function_exists('order_currency_symbol')) {
+    /**
+     * The symbol of the currency the store actually charges in.
+     *
+     * Distinct from currency_symbol(), which follows whatever the visitor has
+     * selected: an order was paid in one currency and stays denominated in it.
+     */
+    function order_currency_symbol(): string
+    {
+        $code = getWebConfig('default_currency', null)
+            ?: (\App\Models\SiteSetting::query()->value('default_currency') ?: 'USD');
+
+        try {
+            $symbol = Cache::rememberForever("currency_symbol_{$code}", function () use ($code) {
+                return \App\Models\Currency::where('code', $code)->value('symbol');
+            });
+        } catch (\Throwable $e) {
+            $symbol = null;
+        }
+
+        return $symbol ?: currency_symbol();
+    }
+}
+
+if (! function_exists('order_amount')) {
+    /**
+     * Format a figure recorded on an order.
+     *
+     * Order rows hold what was actually charged, in the currency the customer
+     * paid in — unlike product prices, which are stored in a base currency and
+     * converted for display. Passing an order total through convert_price()
+     * therefore restates a completed sale, so this formats it as-is.
+     */
+    function order_amount($value): string
+    {
+        return order_currency_symbol().number_format((float) $value, 2);
+    }
+}

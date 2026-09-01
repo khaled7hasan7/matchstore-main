@@ -280,7 +280,7 @@ class CheckoutTest extends TestCase
         Mail::fake();
 
         SiteSetting::create([
-            'site_name' => 'فلك ستور',
+            'site_name' => 'Falak Store',
             'contact_email' => 'admin@store.local',
         ]);
 

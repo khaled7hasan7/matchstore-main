@@ -729,7 +729,7 @@
             <div class="order-summary-grid">
                 <div class="summary-item">
                     <span class="summary-label">{{ __('store.orders.total_amount') }}</span>
-                    <span class="summary-total">{{ currency_symbol() }}{{ number_format(convert_price($order->total), 2) }}</span>
+                    <span class="summary-total">{{ order_amount($order->total) }}</span>
                 </div>
                 <div class="summary-item">
                     <span class="summary-label">{{ __('store.orders.payment_method') }}</span>
@@ -786,8 +786,8 @@
                             </div>
 
                             <div class="item-price-group">
-                                <div class="item-price">{{ currency_symbol() }}{{ number_format(convert_price($detail->price * $detail->quantity), 2) }}</div>
-                                <div class="item-unit-price">{{ currency_symbol() }}{{ number_format(convert_price($detail->price), 2) }} {{ __('store.orders.each') }}</div>
+                                <div class="item-price">{{ order_amount($detail->price * $detail->quantity) }}</div>
+                                <div class="item-unit-price">{{ order_amount($detail->price) }} {{ __('store.orders.each') }}</div>
                             </div>
                         </div>
                     @endforeach
@@ -877,7 +877,7 @@
         <div class="mobile-order-summary">
             <div class="mobile-summary-card full">
                 <div class="mobile-summary-label">{{ __('store.orders.total_amount') }}</div>
-                <div class="mobile-summary-value total">{{ currency_symbol() }}{{ number_format(convert_price($order->total), 2) }}</div>
+                <div class="mobile-summary-value total">{{ order_amount($order->total) }}</div>
             </div>
             <div class="mobile-summary-card">
                 <div class="mobile-summary-label">{{ __('store.orders.payment_method') }}</div>
@@ -923,8 +923,8 @@
                             <div class="mobile-item-qty">{{ __('store.orders.quantity') }}: {{ $detail->quantity }}</div>
                         </div>
                         <div>
-                            <div class="mobile-item-price">{{ currency_symbol() }}{{ number_format(convert_price($detail->price * $detail->quantity), 2) }}</div>
-                            <div class="mobile-item-unit-price">{{ currency_symbol() }}{{ number_format(convert_price($detail->price), 2) }} {{ __('store.orders.each') }}</div>
+                            <div class="mobile-item-price">{{ order_amount($detail->price * $detail->quantity) }}</div>
+                            <div class="mobile-item-unit-price">{{ order_amount($detail->price) }} {{ __('store.orders.each') }}</div>
                         </div>
                     </div>
                 @endforeach

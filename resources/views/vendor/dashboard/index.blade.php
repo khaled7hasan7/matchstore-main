@@ -76,8 +76,8 @@
                 <div class="icon-box"><i class="fas fa-dollar-sign"></i></div>
                 <div class="text-box">
                     <h6>My Sales</h6>
-                    <p>Today: ${{ number_format($data['todaySales'], 2) }}</p>
-                    <p>Total: ${{ number_format($data['totalSales'], 2) }}</p>
+                    <p>Today: {{ order_amount($data['todaySales']) }}</p>
+                    <p>Total: {{ order_amount($data['totalSales']) }}</p>
                 </div>
             </div>
         </div>

@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             PaymentGatewayConfigSeeder::class,
             MenuSeeder::class,
             PageSeeder::class,
+            StorePagesSeeder::class,
             SiteSettingsSeeder::class,
             FalakStoreSeeder::class,
         ]);

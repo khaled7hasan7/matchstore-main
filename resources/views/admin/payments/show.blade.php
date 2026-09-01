@@ -44,7 +44,7 @@
                 <div class="col-md-6">
                     <h6 class="text-muted mb-2">{{ __('cms.payments.amount') }}</h6>
                     <p class="mb-0">
-                        <span class="badge" style="background: #e7f3ff; color: #0066cc; font-size: 1rem; font-weight: 600;">${{ number_format($payment->amount, 2) }}</span>
+                        <span class="badge" style="background: #e7f3ff; color: #0066cc; font-size: 1rem; font-weight: 600;">{{ order_amount($payment->amount) }}</span>
                     </p>
                 </div>
 

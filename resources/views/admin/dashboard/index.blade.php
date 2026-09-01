@@ -258,9 +258,9 @@
                         <i class="fas fa-dollar-sign"></i>
                     </div>
                     <div class="stat-label">{{ __('cms.dashboard.total_sales') }}</div>
-                    <div class="stat-value">${{ number_format($data['totalSales'], 2) }}</div>
+                    <div class="stat-value">{{ order_amount($data['totalSales']) }}</div>
                     <div class="stat-change">
-                        <strong>{{ __('cms.dashboard.today') }}:</strong> ${{ number_format($data['todaySales'], 2) }}
+                        <strong>{{ __('cms.dashboard.today') }}:</strong> {{ order_amount($data['todaySales']) }}
                     </div>
                 </div>
             </div>
@@ -347,7 +347,7 @@
                                                 @endif
                                             </td>
                                             <td>{{ $order->created_at->format('M d, Y') }}</td>
-                                            <td><strong>{{ currency_symbol() }}{{ number_format(convert_price($order->total), 2) }}</strong></td>
+                                            <td><strong>{{ order_amount($order->total) }}</strong></td>
                                             <td>
                                                 @php
                                                     $statusColors = [

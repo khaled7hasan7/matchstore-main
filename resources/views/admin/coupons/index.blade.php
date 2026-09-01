@@ -90,7 +90,7 @@
                                         @if($coupon->type === 'percentage')
                                             {{ $coupon->discount }}%
                                         @else
-                                            ${{ number_format($coupon->discount, 2) }}
+                                            {{ order_amount($coupon->discount) }}
                                         @endif
                                     </span>
                                 </td>

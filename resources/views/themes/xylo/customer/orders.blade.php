@@ -806,7 +806,7 @@
                             <div class="order-info-grid">
                                 <div class="order-info-item">
                                     <span class="order-info-label">{{ __('store.orders.total_amount') }}</span>
-                                    <span class="order-total">{{ currency_symbol() }}{{ number_format(convert_price($order->total), 2) }}</span>
+                                    <span class="order-total">{{ order_amount($order->total) }}</span>
                                 </div>
 
                                 <div class="order-info-item">
@@ -900,7 +900,7 @@
                         <div class="mobile-order-info">
                             <div class="mobile-order-info-item">
                                 <span class="mobile-order-info-label">{{ __('store.orders.total_amount') }}</span>
-                                <span class="mobile-order-info-value mobile-order-total">{{ currency_symbol() }}{{ number_format(convert_price($order->total), 2) }}</span>
+                                <span class="mobile-order-info-value mobile-order-total">{{ order_amount($order->total) }}</span>
                             </div>
                             <div class="mobile-order-info-item">
                                 <span class="mobile-order-info-label">{{ __('store.orders.items_count') }}</span>

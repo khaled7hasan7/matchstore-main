@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
- * Fills the store with فلك ستور: a clothing shop with categories, house
+ * Fills the store with Falak Store: a clothing shop with categories, house
  * labels, products in real colours and sizes, hero banners and promo cards.
  *
  * The catalogue itself lives in database/data/falak-catalog.php and the
@@ -42,7 +42,7 @@ class FalakStoreSeeder extends Seeder
         $vendor = Vendor::firstOrCreate(
             ['email' => 'store@falakstore.example'],
             [
-                'name' => 'فلك ستور',
+                'name' => 'Falak Store',
                 'password' => Hash::make(Str::password(16)),
                 'status' => 'active',
             ]
@@ -55,7 +55,7 @@ class FalakStoreSeeder extends Seeder
         if (! $shopId) {
             $shopId = DB::table('shops')->insertGetId([
                 'vendor_id' => $vendor->id,
-                'name' => 'فلك ستور',
+                'name' => 'Falak Store',
                 'slug' => self::SHOP_SLUG,
                 'status' => 'active',
                 'created_at' => now(),
@@ -71,14 +71,15 @@ class FalakStoreSeeder extends Seeder
         $brands = $this->seedBrands();
         $this->seedBanners();
         $this->seedPromoCards();
+        $this->seedCoupons();
 
         // The catalogue is built once. Re-seeding a live store must not delete
         // products customers have reviewed, wishlisted or ordered.
         if (DB::table('products')->where('shop_id', $shopId)->exists()) {
-            $this->command->info('فلك ستور: المنتجات موجودة مسبقاً، لم يُحذف أو يُضف شيء.');
+            $this->command->info('Falak Store: المنتجات موجودة مسبقاً، لم يُحذف أو يُضف شيء.');
         } else {
             $this->seedProducts($shopId, $vendor->id, $categories, $brands, $attributes);
-            $this->command->info('فلك ستور: تم تجهيز المتجر بنجاح.');
+            $this->command->info('Falak Store: تم تجهيز المتجر بنجاح.');
         }
 
         Cache::forget('site_settings');
@@ -134,7 +135,7 @@ class FalakStoreSeeder extends Seeder
 
         $this->pruneEmptyTaxonomy();
 
-        $this->command->info('فلك ستور: أُزيل كتالوج المكتبة السابق.');
+        $this->command->info('Falak Store: أُزيل كتالوج المكتبة السابق.');
     }
 
     /**
@@ -175,13 +176,13 @@ class FalakStoreSeeder extends Seeder
     {
         $settings = SiteSetting::first() ?? new SiteSetting;
         $settings->fill([
-            'site_name' => 'فلك ستور',
+            'site_name' => 'Falak Store',
             'tagline' => 'ملابس رجالية ونسائية وأطفال',
-            'meta_title' => 'فلك ستور - متجر الملابس',
-            'meta_description' => 'فلك ستور لبيع الملابس الرجالية والنسائية وملابس الأطفال والأحذية والحقائب والإكسسوارات، توصيل داخل الأردن وفلسطين.',
-            'meta_keywords' => 'ملابس, أزياء, فلك ستور, ملابس رجالية, ملابس نسائية, ملابس أطفال, أحذية, حقائب',
+            'meta_title' => 'Falak Store — متجر الملابس',
+            'meta_description' => 'Falak Store لبيع الملابس الرجالية والنسائية وملابس الأطفال والأحذية والحقائب والإكسسوارات، توصيل داخل الأردن وفلسطين.',
+            'meta_keywords' => 'ملابس, أزياء, Falak Store, فلك ستور, ملابس رجالية, ملابس نسائية, ملابس أطفال, أحذية, حقائب',
             'contact_email' => 'info@falakstore.com',
-            'footer_text' => '© '.date('Y').' فلك ستور. جميع الحقوق محفوظة.',
+            'footer_text' => '© '.date('Y').' Falak Store. جميع الحقوق محفوظة.',
             'logo' => '/images/catalog/falak-logo.svg',
             'default_currency' => 'JOD',
             'default_language' => 'ar',
@@ -395,6 +396,27 @@ class FalakStoreSeeder extends Seeder
     }
 
     /**
+     * The discount codes the shop advertises. Kept idempotent on the code and
+     * given a fresh expiry each run, so re-seeding never leaves the storefront
+     * offering something the checkout will reject as expired.
+     */
+    private function seedCoupons(): void
+    {
+        foreach ($this->catalog['coupons'] as $coupon) {
+            DB::table('coupons')->updateOrInsert(
+                ['code' => $coupon['code']],
+                [
+                    'type' => $coupon['type'],
+                    'discount' => $coupon['discount'],
+                    'expires_at' => now()->addDays($coupon['valid_days']),
+                    'updated_at' => now(),
+                    'created_at' => now(),
+                ]
+            );
+        }
+    }
+
+    /**
      * @param  array<string,int>  $categories
      * @param  array<string,int>  $brands
      * @param  array<string,array<string,int>>  $attributes
@@ -522,7 +544,11 @@ class FalakStoreSeeder extends Seeder
                     // Spread the stock over the variants rather than giving
                     // every size the product's whole quantity.
                     'stock' => (int) max(1, round($item['stock'] / (count($item['colors']) * count($item['sizes'])))),
-                    'SKU' => strtoupper(Str::of($item['slug'])->substr(0, 10)->replace('-', '')).'-'.str_pad((string) $sequence, 3, '0', STR_PAD_LEFT),
+                    // Derived from the product id, not the slug: two slugs
+                    // sharing their first characters (womens-midi-dress and
+                    // womens-midi-skirt) produced the same SKU and the unique
+                    // index rejected the second one mid-seed.
+                    'SKU' => sprintf('FS-%04d-%02d', $product->id, $sequence),
                     'weight' => 0.4,
                     'is_primary' => $first,
                 ]);
