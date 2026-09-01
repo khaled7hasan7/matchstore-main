@@ -40,6 +40,10 @@ use Illuminate\Support\Facades\Route;
 
 require base_path('routes/store.php');
 
+// Reports what this deployment is running and what it is connected to, so
+// "the site has not changed" can be diagnosed without guessing.
+Route::get('/__status', \App\Http\Controllers\StatusController::class);
+
 // Admin login route (separate from customer login)
 Route::get('/admin/login', function () {
     return view('admin.auth.login');
