@@ -97,8 +97,10 @@
 .product-image-wrapper {
     position: relative;
     overflow: hidden;
-    background: transparent;
-    height: 200px;
+    background: #f4f2ee;
+    /* Portrait to match the 3:4 product images; a fixed 200px height cropped
+       them to a band across the middle of the garment. */
+    aspect-ratio: 3/4;
 }
 
 .product-image-wrapper > a {

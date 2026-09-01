@@ -22,8 +22,10 @@
 .product-image-wrapper {
     position: relative;
     overflow: hidden;
-    aspect-ratio: 1/1;
-    background: #f8f9fa;
+    /* Portrait, like every clothing shop — the product images are 3:4 and a
+       square box cropped the hem off every garment. */
+    aspect-ratio: 3/4;
+    background: #f4f2ee;
 }
 
 .product-image-wrapper img {
