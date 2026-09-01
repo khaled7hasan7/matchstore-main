@@ -44,6 +44,12 @@ require base_path('routes/store.php');
 // "the site has not changed" can be diagnosed without guessing.
 Route::get('/__status', \App\Http\Controllers\StatusController::class);
 
+// Migrates and seeds from inside the running site — the path that works even
+// when the build image has no PHP binary. Hidden unless SETUP_TOKEN is set,
+// and excluded from CSRF because it is reached with a token, not a session.
+Route::match(['get', 'post'], '/__setup', \App\Http\Controllers\SetupController::class)
+    ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
+
 // Admin login route (separate from customer login)
 Route::get('/admin/login', function () {
     return view('admin.auth.login');

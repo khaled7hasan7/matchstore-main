@@ -5,10 +5,6 @@ namespace Database\Seeders;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Language;
-use App\Models\Product;
-use App\Models\ProductImage;
-use App\Models\ProductTranslation;
-use App\Models\ProductVariant;
 use App\Models\SiteSetting;
 use App\Models\Vendor;
 use Illuminate\Database\Seeder;
@@ -421,80 +417,179 @@ class FalakStoreSeeder extends Seeder
      * @param  array<string,int>  $brands
      * @param  array<string,array<string,int>>  $attributes
      */
+    /**
+     * The catalogue, written in batches rather than row by row.
+     *
+     * A product carries a translation per language, an image per colour and a
+     * variant per colour/size pair — around 2,500 rows in total. Inserted one
+     * at a time that is 2,500 round trips, which is unnoticeable against a
+     * local database and minutes against a hosted one. Batching turns it into
+     * roughly a dozen statements, which is what makes seeding possible inside
+     * a request.
+     *
+     * @param  array<string,int>  $categories
+     * @param  array<string,int>  $brands
+     * @param  array<string,array<string,int>>  $attributes
+     */
     private function seedProducts(int $shopId, int $vendorId, array $categories, array $brands, array $attributes): void
     {
-        foreach ($this->catalog['products'] as $item) {
-            $product = Product::create([
-                'shop_id' => $shopId,
-                'vendor_id' => $vendorId,
-                'category_id' => $categories[$item['category']],
-                'brand_id' => $brands[$item['brand']],
-                'product_type' => 'physical',
-                'status' => 1,
-                'slug' => $item['slug'],
-            ]);
+        DB::transaction(function () use ($shopId, $vendorId, $categories, $brands, $attributes) {
+            $now = now();
 
-            $colorNames = array_map(
-                fn ($key) => $this->catalog['colors'][$key],
-                $item['colors']
-            );
+            $products = [];
 
-            $this->seedProductTranslations($product, $item, $colorNames);
-            $this->seedProductImages($product, $item);
-            $this->seedProductVariants($product, $item, $attributes);
-            $this->seedProductAttributes($product, $item, $attributes);
-        }
+            foreach ($this->catalog['products'] as $item) {
+                $products[] = [
+                    'shop_id' => $shopId,
+                    'vendor_id' => $vendorId,
+                    'category_id' => $categories[$item['category']],
+                    'brand_id' => $brands[$item['brand']],
+                    'product_type' => 'physical',
+                    'status' => 1,
+                    'slug' => $item['slug'],
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+
+            foreach (array_chunk($products, 200) as $chunk) {
+                DB::table('products')->insert($chunk);
+            }
+
+            $productIds = DB::table('products')->where('shop_id', $shopId)->pluck('id', 'slug');
+
+            $translations = $images = $variants = $productAttributes = [];
+
+            foreach ($this->catalog['products'] as $item) {
+                $productId = $productIds[$item['slug']];
+                $colors = array_map(fn ($key) => $this->catalog['colors'][$key], $item['colors']);
+
+                array_push($translations, ...$this->translationRows($productId, $item, $colors, $now));
+                array_push($images, ...$this->imageRows($productId, $item, $now));
+                array_push($variants, ...$this->variantRows($productId, $item, $now));
+                array_push($productAttributes, ...$this->productAttributeRows($productId, $item, $attributes, $now));
+            }
+
+            foreach (array_chunk($translations, 200) as $chunk) {
+                DB::table('product_translations')->insert($chunk);
+            }
+
+            foreach (array_chunk($images, 200) as $chunk) {
+                DB::table('product_images')->insert($chunk);
+            }
+
+            foreach (array_chunk($variants, 200) as $chunk) {
+                DB::table('product_variants')->insert($chunk);
+            }
+
+            foreach (array_chunk($productAttributes, 500) as $chunk) {
+                DB::table('product_attribute_values')->insert($chunk);
+            }
+
+            $this->linkVariantAttributes($productIds, $attributes, $now);
+        });
     }
 
-    /** @param  array<int,array{ar:string,en:string,hex:string}>  $colors */
-    private function seedProductTranslations(Product $product, array $item, array $colors): void
+    /** @return array<int,array<string,mixed>> */
+    private function translationRows(int $productId, array $item, array $colors, $now): array
     {
         $arabicColors = implode('، ', array_column($colors, 'ar'));
         $englishColors = implode(', ', array_column($colors, 'en'));
         $sizes = implode(' · ', $item['sizes']);
 
-        ProductTranslation::create([
-            'product_id' => $product->id,
-            'language_code' => 'ar',
-            'name' => $item['ar'],
-            'description' => $item['description']
-                .' متوفر بالألوان: '.$arabicColors.'. المقاسات: '.$sizes.'.',
-            'short_description' => 'الألوان: '.$arabicColors,
-            'tags' => 'ملابس, '.$item['ar'],
-        ]);
-
-        ProductTranslation::create([
-            'product_id' => $product->id,
-            'language_code' => 'en',
-            'name' => $item['en'],
-            'description' => $item['en'].'. Available in '.$englishColors.'. Sizes: '.$sizes.'.',
-            'short_description' => 'Colors: '.$englishColors,
-            'tags' => 'clothing, '.$item['en'],
-        ]);
+        return [
+            [
+                'product_id' => $productId,
+                'language_code' => 'ar',
+                'name' => $item['ar'],
+                'description' => $item['description']
+                    .' متوفر بالألوان: '.$arabicColors.'. المقاسات: '.$sizes.'.',
+                'short_description' => 'الألوان: '.$arabicColors,
+                'tags' => 'ملابس, '.$item['ar'],
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'product_id' => $productId,
+                'language_code' => 'en',
+                'name' => $item['en'],
+                'description' => $item['en'].'. Available in '.$englishColors.'. Sizes: '.$sizes.'.',
+                'short_description' => 'Colors: '.$englishColors,
+                'tags' => 'clothing, '.$item['en'],
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+        ];
     }
 
-    private function seedProductImages(Product $product, array $item): void
+    /** @return array<int,array<string,mixed>> */
+    private function imageRows(int $productId, array $item, $now): array
     {
+        $rows = [];
+
         foreach ($item['colors'] as $index => $color) {
             $image = '/images/catalog/'.$item['shape'].'-'.$color.'.svg';
 
-            ProductImage::create([
-                'product_id' => $product->id,
+            // The first colour is the card thumbnail; the rest fill the gallery.
+            $rows[] = [
+                'product_id' => $productId,
                 'name' => $item['slug'].'-'.$color,
                 'image_url' => $image,
-                // The first colour is the card thumbnail; the rest fill the gallery.
                 'type' => $index === 0 ? 'thumb' : 'slide',
-            ]);
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
 
             if ($index === 0) {
-                ProductImage::create([
-                    'product_id' => $product->id,
+                $rows[] = [
+                    'product_id' => $productId,
                     'name' => $item['slug'].'-'.$color.'-slide',
                     'image_url' => $image,
                     'type' => 'slide',
-                ]);
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
             }
         }
+
+        return $rows;
+    }
+
+    /** @return array<int,array<string,mixed>> */
+    private function variantRows(int $productId, array $item, $now): array
+    {
+        $rows = [];
+        $sequence = 0;
+        $first = true;
+        $spread = count($item['colors']) * count($item['sizes']);
+
+        foreach ($item['colors'] as $color) {
+            foreach ($item['sizes'] as $size) {
+                $sequence++;
+
+                $rows[] = [
+                    'product_id' => $productId,
+                    'variant_slug' => $item['slug'].'-'.$color.'-'.Str::slug((string) $size),
+                    'price' => $this->baseAmount($item['price']),
+                    'discount_price' => $this->baseAmount($item['discount_price']),
+                    // Spread the stock over the variants rather than giving
+                    // every size the product's whole quantity.
+                    'stock' => (int) max(1, round($item['stock'] / $spread)),
+                    // Derived from the product id, not the slug: two slugs
+                    // sharing their first characters produced the same SKU
+                    // and the unique index rejected the second one mid-seed.
+                    'SKU' => sprintf('FS-%04d-%02d', $productId, $sequence),
+                    'weight' => 0.4,
+                    'is_primary' => $first,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+
+                $first = false;
+            }
+        }
+
+        return $rows;
     }
 
     /**
@@ -503,8 +598,9 @@ class FalakStoreSeeder extends Seeder
      * these rows are what makes the swatches and size buttons appear.
      *
      * @param array<string,array<string,int>> $attributes
+     * @return array<int,array<string,mixed>>
      */
-    private function seedProductAttributes(Product $product, array $item, array $attributes): void
+    private function productAttributeRows(int $productId, array $item, array $attributes, $now): array
     {
         $valueIds = [];
 
@@ -516,64 +612,61 @@ class FalakStoreSeeder extends Seeder
             $valueIds[] = $attributes['Size'][(string) $size] ?? null;
         }
 
-        foreach (array_filter($valueIds) as $valueId) {
-            DB::table('product_attribute_values')->insert([
-                'product_id' => $product->id,
-                'attribute_value_id' => $valueId,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
+        return array_map(fn ($valueId) => [
+            'product_id' => $productId,
+            'attribute_value_id' => $valueId,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ], array_values(array_filter($valueIds)));
     }
 
-    /** @param array<string,array<string,int>> $attributes */
-    private function seedProductVariants(Product $product, array $item, array $attributes): void
+    /**
+     * Ties each variant to its colour and size. Runs after the variants exist,
+     * reading their ids back in one query rather than one per row.
+     *
+     * @param \Illuminate\Support\Collection<string,int> $productIds
+     * @param array<string,array<string,int>> $attributes
+     */
+    private function linkVariantAttributes($productIds, array $attributes, $now): void
     {
-        $sequence = 0;
-        $first = true;
+        $variantIds = DB::table('product_variants')
+            ->whereIn('product_id', $productIds->values())
+            ->pluck('id', 'variant_slug');
 
-        foreach ($item['colors'] as $color) {
-            foreach ($item['sizes'] as $size) {
-                $sequence++;
+        $rows = [];
 
-                $variant = ProductVariant::create([
-                    'product_id' => $product->id,
-                    'variant_slug' => $item['slug'].'-'.$color.'-'.Str::slug((string) $size),
-                    'price' => $this->baseAmount($item['price']),
-                    'discount_price' => $this->baseAmount($item['discount_price']),
-                    // Spread the stock over the variants rather than giving
-                    // every size the product's whole quantity.
-                    'stock' => (int) max(1, round($item['stock'] / (count($item['colors']) * count($item['sizes'])))),
-                    // Derived from the product id, not the slug: two slugs
-                    // sharing their first characters (womens-midi-dress and
-                    // womens-midi-skirt) produced the same SKU and the unique
-                    // index rejected the second one mid-seed.
-                    'SKU' => sprintf('FS-%04d-%02d', $product->id, $sequence),
-                    'weight' => 0.4,
-                    'is_primary' => $first,
-                ]);
+        foreach ($this->catalog['products'] as $item) {
+            $productId = $productIds[$item['slug']];
 
-                $first = false;
+            foreach ($item['colors'] as $color) {
+                foreach ($item['sizes'] as $size) {
+                    $slug = $item['slug'].'-'.$color.'-'.Str::slug((string) $size);
+                    $variantId = $variantIds[$slug] ?? null;
 
-                $this->linkVariantAttributes($product, $variant, [
-                    $attributes['Color'][$this->catalog['colors'][$color]['en']] ?? null,
-                    $attributes['Size'][(string) $size] ?? null,
-                ]);
+                    if (! $variantId) {
+                        continue;
+                    }
+
+                    foreach ([
+                        $attributes['Color'][$this->catalog['colors'][$color]['en']] ?? null,
+                        $attributes['Size'][(string) $size] ?? null,
+                    ] as $valueId) {
+                        if ($valueId) {
+                            $rows[] = [
+                                'product_variant_id' => $variantId,
+                                'attribute_value_id' => $valueId,
+                                'product_id' => $productId,
+                                'created_at' => $now,
+                                'updated_at' => $now,
+                            ];
+                        }
+                    }
+                }
             }
         }
-    }
 
-    /** @param array<int,int|null> $attributeValueIds */
-    private function linkVariantAttributes(Product $product, ProductVariant $variant, array $attributeValueIds): void
-    {
-        foreach (array_filter($attributeValueIds) as $attributeValueId) {
-            DB::table('product_variant_attribute_values')->insert([
-                'product_variant_id' => $variant->id,
-                'attribute_value_id' => $attributeValueId,
-                'product_id' => $product->id,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+        foreach (array_chunk($rows, 500) as $chunk) {
+            DB::table('product_variant_attribute_values')->insert($chunk);
         }
     }
 
