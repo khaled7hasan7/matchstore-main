@@ -7,40 +7,7 @@
  * writes to is redirected there before the framework boots. These are only
  * defaults — anything already set in the Vercel project environment wins.
  */
-$serverlessDefaults = [
-    'APP_CONFIG_CACHE' => '/tmp/config.php',
-    'APP_EVENTS_CACHE' => '/tmp/events.php',
-    'APP_PACKAGES_CACHE' => '/tmp/packages.php',
-    'APP_ROUTES_CACHE' => '/tmp/routes.php',
-    'APP_SERVICES_CACHE' => '/tmp/services.php',
-    'VIEW_COMPILED_PATH' => '/tmp/views',
-    'SESSION_DRIVER' => 'cookie',
-    'CACHE_DRIVER' => 'array',
-    'QUEUE_CONNECTION' => 'sync',
-    'LOG_CHANNEL' => 'stderr',
-];
-
-// Non-secret connection coordinates for this deployment. Kept in their own
-// file so they read as configuration rather than entry-point code, and so the
-// secret (DB_PASSWORD) stays out of the repository.
-$serverlessDefaults += require __DIR__.'/../bootstrap/deployment-env.php';
-
-foreach ($serverlessDefaults as $key => $value) {
-    $current = getenv($key);
-
-    if ($current === false || $current === '') {
-        putenv("{$key}={$value}");
-        $_ENV[$key] = $value;
-        $_SERVER[$key] = $value;
-    }
-}
-
-// Blade does not create the compiled-view directory itself.
-$viewsPath = getenv('VIEW_COMPILED_PATH');
-
-if ($viewsPath && ! is_dir($viewsPath)) {
-    @mkdir($viewsPath, 0755, true);
-}
+require __DIR__.'/../bootstrap/apply-deployment-env.php';
 
 // Without an encryption key Laravel cannot boot, and the resulting stack
 // trace tells the operator nothing. Show the actual fix instead. Skipped when

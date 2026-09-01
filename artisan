@@ -17,6 +17,10 @@ define('LARAVEL_START', microtime(true));
 
 require __DIR__.'/vendor/autoload.php';
 
+// The deployment's environment, so commands run during a build reach the
+// same database the site does. No-op when a .env file is present.
+require __DIR__.'/bootstrap/apply-deployment-env.php';
+
 $app = require_once __DIR__.'/bootstrap/app.php';
 
 /*

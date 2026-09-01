@@ -3,46 +3,59 @@
 # Runs on every Vercel deployment, before the function is packaged.
 #
 # The database lives outside the deployment, so pushing code alone never
-# changes what the shop displays — that was the whole reason "nothing
-# updates" after a deploy. Migrating and seeding here keeps the two in step.
+# changes what the shop displays. Migrating and seeding here keeps the two in
+# step. Every seeder is idempotent and none deletes anything a customer
+# created, so repeating this on each deploy is safe.
 #
-# Every seeder is idempotent and none of them deletes anything a customer
-# created, so running this on each deploy is safe. It also never fails the
-# build: a deploy that cannot reach the database should still go out and
-# show the connection notice, not disappear behind a red build.
+# It never fails the build: a deployment that cannot reach the database should
+# still go out and show the connection notice rather than disappear behind a
+# red build. It does say so loudly, because the first version of this script
+# swallowed the failure and the database sat untouched for days.
 
 set -uo pipefail
 
-echo "── Falak Store build ──────────────────────────────────────────"
+banner() { printf '\n%s\n' "────────────────────────────────────────────────────────────"; }
+
+banner
+echo "  Falak Store — deployment build"
+banner
 
 if ! command -v php > /dev/null 2>&1; then
-    echo "!! php not found in the build image — skipping migrate/seed."
-    echo "   Run them yourself:  php artisan migrate --force && php artisan db:seed --force"
+    echo "!! php is not on PATH in the build image — skipping migrate/seed."
+    echo "   Run it yourself:  php artisan falak:setup"
     exit 0
 fi
-
-php -r 'exit(0);' || { echo "!! php present but not runnable — skipping."; exit 0; }
 
 if [ -z "${DB_PASSWORD:-}" ]; then
     echo "!! DB_PASSWORD is not set for this environment — skipping migrate/seed."
-    echo "   Add it in Vercel → Settings → Environment Variables, then redeploy."
+    echo "   Vercel → Settings → Environment Variables → add it for Production,"
+    echo "   then redeploy. Nothing else here can work without it."
     exit 0
 fi
 
-echo "→ migrating"
-php artisan migrate --force --no-interaction 2>&1 | tail -20
-
-echo "→ seeding"
-php artisan db:seed --force --no-interaction 2>&1 | tail -30
-
-# The dashboard needs an account, and there is no other moment in a
-# serverless deployment to create one. Both variables must be set; the
-# password is never generated here so it cannot end up in a build log.
+# falak:setup prints the database it is about to touch, migrates, seeds, and
+# reports the row counts — everything needed to read this log later.
+ARGS=()
 if [ -n "${ADMIN_EMAIL:-}" ] && [ -n "${ADMIN_PASSWORD:-}" ]; then
-    echo "→ administrator account"
-    php artisan admin:create "$ADMIN_EMAIL" --password="$ADMIN_PASSWORD" --no-interaction 2>&1 \
-        | grep -v -i password
+    ARGS+=(--admin="$ADMIN_EMAIL" --password="$ADMIN_PASSWORD")
+elif [ -n "${ADMIN_EMAIL:-}" ]; then
+    echo "!! ADMIN_EMAIL is set but ADMIN_PASSWORD is not — skipping the admin account."
 fi
 
-echo "── build done ─────────────────────────────────────────────────"
+set +e
+php artisan falak:setup "${ARGS[@]+"${ARGS[@]}"}" --no-interaction 2>&1 | grep -v -i 'password:'
+status=${PIPESTATUS[0]}
+set -e
+
+if [ "$status" -ne 0 ]; then
+    banner
+    echo "  !! THE DATABASE WAS NOT UPDATED — the site will keep showing old data."
+    echo "     The reason is printed above. The deployment itself continues."
+    banner
+else
+    banner
+    echo "  Database is up to date."
+    banner
+fi
+
 exit 0

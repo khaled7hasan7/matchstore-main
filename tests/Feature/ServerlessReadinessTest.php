@@ -53,4 +53,37 @@ class ServerlessReadinessTest extends TestCase
         $this->assertStringNotContainsString('javascript:', $clean);
         $this->assertStringContainsString('<strong>سليم</strong>', $clean);
     }
+
+    public function test_both_entry_points_apply_the_deployment_environment(): void
+    {
+        // artisan did not, so `php artisan migrate` during a deployment build
+        // fell back to MySQL on localhost, failed, and left the database
+        // untouched while the deploy reported success.
+        foreach (['artisan', 'api/index.php'] as $entryPoint) {
+            $this->assertStringContainsString(
+                'apply-deployment-env.php',
+                file_get_contents(base_path($entryPoint)),
+                $entryPoint.' must apply the deployment environment before booting'
+            );
+        }
+    }
+
+    public function test_the_deployment_environment_names_a_database_but_no_secret(): void
+    {
+        $env = require base_path('bootstrap/deployment-env.php');
+
+        $this->assertSame('pgsql', $env['DB_CONNECTION']);
+        $this->assertArrayHasKey('DB_HOST', $env);
+        $this->assertArrayHasKey('DB_USERNAME', $env);
+        $this->assertArrayNotHasKey('DB_PASSWORD', $env, 'the password belongs to the host, not the repository');
+    }
+
+    public function test_a_local_env_file_overrides_the_deployment_defaults(): void
+    {
+        $source = file_get_contents(base_path('bootstrap/apply-deployment-env.php'));
+
+        // Without this guard the deployment's database would be forced on
+        // every developer machine, ignoring their own .env.
+        $this->assertStringContainsString("file_exists(__DIR__.'/../.env')", $source);
+    }
 }

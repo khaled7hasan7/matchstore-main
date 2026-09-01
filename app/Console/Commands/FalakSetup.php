@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * One command to bring a database up to date and report what is in it.
@@ -33,23 +34,46 @@ class FalakSetup extends Command
             return self::SUCCESS;
         }
 
-        if (! $this->option('skip-migrate')) {
-            $this->call('migrate', ['--force' => true]);
-        }
+        try {
+            if (! $this->option('skip-migrate') && $this->call('migrate', ['--force' => true]) !== self::SUCCESS) {
+                return $this->failed('فشل تنفيذ الترحيلات.');
+            }
 
-        $this->call('db:seed', ['--force' => true]);
+            if ($this->call('db:seed', ['--force' => true]) !== self::SUCCESS) {
+                return $this->failed('فشل زرع البيانات.');
+            }
 
-        if ($email = $this->option('admin')) {
-            $this->newLine();
-            $this->call('admin:create', array_filter([
-                'email' => $email,
-                '--password' => $this->option('password'),
-            ]));
+            if ($email = $this->option('admin')) {
+                $this->newLine();
+                $this->call('admin:create', array_filter([
+                    'email' => $email,
+                    '--password' => $this->option('password'),
+                ]));
+            }
+        } catch (\Throwable $e) {
+            // Nearly always the database being unreachable. The stack trace
+            // says nothing useful in a build log; the message does.
+            return $this->failed(class_basename($e).': '.Str::limit($e->getMessage(), 300));
         }
 
         $this->report();
 
         return self::SUCCESS;
+    }
+
+    /**
+     * A failure a build log will actually show, rather than a stack trace
+     * scrolled off the top.
+     */
+    private function failed(string $reason): int
+    {
+        $this->newLine();
+        $this->error('  ✗ '.$reason);
+        $this->line('    القاعدة أعلاه هي التي حاول الأمر الوصول إليها.');
+        $this->line('    تحقّق أن DB_PASSWORD مضبوط لهذه البيئة وأن الحاوية تقبل الاتصال.');
+        $this->newLine();
+
+        return self::FAILURE;
     }
 
     private function showConnection(): void
